@@ -1,0 +1,17 @@
+{
+  "name": "Diario de Macros",
+  "short_name": "Macros",
+  "description": "Registro de comidas, macros, micros, peso y dietas. Tus datos se guardan solo en tu dispositivo.",
+  "lang": "es-ES",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2F4EF",
+  "theme_color": "#F2F4EF",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
