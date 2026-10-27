@@ -375,6 +375,38 @@ span.addline{display:block}
 .fitem.withimg .c{grid-column:2/-1;text-align:left}
 .aiphoto{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .aiphoto img{width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+/* foto → macros */
+.dropzone{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;border:2px dashed color-mix(in srgb,var(--accent) 55%,var(--line));border-radius:16px;padding:34px 18px;background:color-mix(in srgb,var(--accent) 5%,var(--surface));cursor:pointer;color:var(--accent)}
+.dropzone:hover,.drag .dropzone{background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+.dropzone:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.dropzone svg{width:52px;height:52px}
+.dropzone b{font-family:var(--display);font-size:1.1rem;color:var(--ink)}
+.dropzone span{font-size:.85rem;color:var(--muted)}
+.snaphead{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;align-items:center}
+.snaphead img{width:96px;height:96px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+.snapinfo{display:flex;flex-direction:column;gap:8px;align-items:flex-start;min-width:0}
+.snapname{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface);font-family:var(--display);font-weight:700;font-size:1.02rem}
+.snapname:focus{border-color:var(--accent);outline:none}
+.snaptot{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;border:1.5px solid var(--ink);border-radius:6px;padding:10px;background:var(--surface)}
+.snaptot b{display:block;font-size:1.25rem}
+.snaptot span{font-size:.72rem;color:var(--muted)}
+.sup{margin:4px 0 0;padding-left:1.1em}
+.snaplist{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-top:6px;overflow:hidden}
+.snaprow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line)}
+.snaprow:last-of-type{border-bottom:0}
+.snaprow.off{opacity:.5}
+.sn{border:0;background:none;text-align:left;padding:2px;min-width:0;display:flex;flex-wrap:wrap;gap:2px 6px;align-items:baseline}
+.sn span{font-weight:600;text-decoration:underline dotted var(--muted);text-underline-offset:3px;overflow-wrap:anywhere}
+.sn small{flex-basis:100%;color:var(--muted);font-size:.74rem;font-family:var(--mono)}
+.sn:hover span{color:var(--accent)}
+.gstep{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.gstep button{border:0;background:var(--sunk);width:30px;height:34px;font-weight:700;font-size:1rem}
+.gstep input{width:3.6rem;border:0;text-align:center;font-family:var(--mono);font-weight:600;background:none;padding:0;height:34px}
+.gstep input:focus{outline:none;background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.sdel{border:0;background:none;color:var(--muted);font-size:1rem;padding:6px}
+.sdel:hover{color:var(--bad)}
+.snapsearch{padding:10px;background:var(--sunk);border-bottom:1px solid var(--line)}
+@media (max-width:420px){.snaptot{grid-template-columns:repeat(2,minmax(0,1fr))}.snaprow{grid-template-columns:minmax(0,1fr) auto}.snaprow .sdel{grid-column:2;grid-row:1}.snaprow .gstep{grid-column:1/-1;justify-self:start}}
 @media (prefers-reduced-motion:no-preference){.thinking::before{animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}}
 .ok-notice{border-left-color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,var(--surface))}
 .airow{display:grid;grid-template-columns:auto minmax(0,1fr) 4.6rem auto;gap:8px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line)}
@@ -1306,7 +1338,7 @@ function viewDay(){
     ${row('p','mp')}${row('c','mc')}${row('f','mf')}
     <details class="micros" ${localGet('microsOpen')==='0'?'':'open'}><summary>Fibra, azúcares y micronutrientes</summary><div class="mgrid">${MICRO.map(x=>row(x)).join('')}</div></details>
     <div class="labelfoot">Toca cualquier nutriente para ver qué alimentos te lo aportan. Proteína: ${fmt(T.p/curWeight(),1)} g/kg de peso corporal.</div>
-    <div class="btnrow" style="margin-top:10px"><button class="pillbtn" data-fill="1">¿Qué como ahora?</button>${SAMPLE?'<button class="pillbtn" data-aiopen="1">Escribir lo que comí</button>':''}</div>
+    <div class="btnrow" style="margin-top:10px">${(SAMPLE&&SAMPLE_IMG)||STANDALONE?'<button class="btn small" data-snap="1">Foto de tu comida</button>':''}<button class="pillbtn" data-fill="1">¿Qué como ahora?</button>${SAMPLE?'<button class="pillbtn" data-aiopen="1">Escribir lo que comí</button>':''}</div>
   </section>
   <section class="water" aria-label="Agua">
     <div><h3>Agua</h3><span class="wv">${fmt(wml/1000,2)} / ${fmt(wg/1000,1)} L</span> <span class="hint">${wml>=wg?'· objetivo cumplido':'· faltan '+fmt((wg-wml)/1000,2)+' L'}</span></div>
@@ -1489,6 +1521,7 @@ function viewProfile(){
     ${auto?`<div><span class="eyebrow">Objetivos de un día de entreno</span><div class="ntable" style="margin-top:6px">${NK.map(x=>`<div>${META[x].l}${META[x].t==='max'?' (máx.)':''}</div><div>${fmtN(x,calc().goals[x])} ${META[x].u}</div>`).join('')}</div><p class="hint" style="margin:8px 0 0">Micronutrientes: ingestas de referencia para tu sexo y edad. Fibra: 14 g por cada 1.000 kcal. Azúcares y saturadas: 10% de las kcal.</p></div>`:
     `<div class="form"><p class="hint full" style="margin:0">Modo manual: escribe tus propios objetivos de un día de entreno. El ajuste por tipo de día se sigue aplicando.</p>${NK.map(k=>`<label>${META[k].l}${META[k].t==='max'?' (máx.)':''} <input type="number" inputmode="decimal" min="0" step="any" data-goal="${k}" value="${S.goals[k]}"><span class="hint">${META[k].u}/día</span></label>`).join('')}</div>`}
   </section>
+  ${apiKeyHTML()}
   <section class="card stack" style="gap:10px" id="importBox"><h2 class="sec">Copia de seguridad</h2><p class="hint" style="margin:0">Descarga todos tus datos (días, pesajes, alimentos, dietas, perfil) en un archivo y restáuralos cuando quieras.</p>
     ${PENDING_IMPORT?`<div class="notice">La copia del ${esc(String(PENDING_IMPORT.exported||'').slice(0,10))} tiene ${Object.keys(PENDING_IMPORT.days||{}).length} días, ${Object.keys(PENDING_IMPORT.weights||{}).length} pesajes y ${(PENDING_IMPORT.foods||[]).length} alimentos tuyos. Los días y pesajes de la copia sustituyen a los mismos días actuales; el resto se mantiene.</div><div class="btnrow"><button class="btn small" id="importGo">Restaurar copia</button><button class="pillbtn" id="importCancel">Cancelar</button></div>`:
     `<div class="btnrow"><button class="btn ghost small" id="exportBackup">Descargar copia</button><label class="pillbtn filebtn">Restaurar desde archivo<input type="file" id="importFile" accept="application/json,.json" hidden></label></div>`}
@@ -1742,12 +1775,15 @@ function drawRView(){
 /* ---------- Claude dentro de la app ---------- */
 let SAMPLE=null,SAMPLE_IMG=null;
 async function initSample(){
+  if(STANDALONE){enableApiSample();render();return}
   try{SAMPLE=await window.claude?.use?.('sample')}catch(e){SAMPLE=null}
   if(SAMPLE){try{const l=await SAMPLE.limits();SAMPLE_IMG=l&&l.images?l.images:null}catch(e){SAMPLE_IMG=null}}
   const ae=document.activeElement;if(SAMPLE&&!(ae&&V.contains(ae)&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA')))render();
   if(SAMPLE&&SH.st&&SH.st.mode==='pick')drawPick();
 }
 function sampleMsg(e){const c=e&&e.code;
+  if(c==='bad_key')return 'Tu clave de la API no es válida. Revísala en Perfil y objetivos.';
+  if(c==='no_key')return 'Añade tu clave de la API en Perfil y objetivos.';
   if(['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].includes(c)){SAMPLE=null;return 'Claude no está disponible en esta página (o no le has dado permiso). Puedes seguir usando la app sin esta función.'}
   if(c==='images_unavailable'){SAMPLE_IMG=null;return 'En esta vista no se pueden enviar fotos.'}
   if(c==='image_rejected')return 'No he podido usar esa imagen. Prueba con otra foto (JPG o PNG) más nítida.';
@@ -1758,9 +1794,9 @@ function sampleMsg(e){const c=e&&e.code;
 function mdLite(t){let h='',inList=false;t.split(/\n+/).map(l=>l.trim()).filter(Boolean).forEach(l=>{const li=/^[-•*]\s/.test(l);const b=esc(li?l.replace(/^[-•*]\s+/,''):l).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');if(li&&!inList){h+='<ul>';inList=true}if(!li&&inList){h+='</ul>';inList=false}h+=li?`<li>${b}</li>`:`<p>${b}</p>`});if(inList)h+='</ul>';return h}
 
 function drawAI(){
-  const st=SH.st;SH.title.textContent=SAMPLE_IMG?'Escribe o fotografía tu comida':'Escribe lo que has comido';
-  SH.body.innerHTML=`<p class="hint" style="margin:0">Escríbelo como se lo contarías a alguien${SAMPLE_IMG?' o hazle una foto al plato':''}. Claude lo convierte en alimentos con sus gramos y tú lo revisas antes de guardarlo.</p>
-  ${SAMPLE_IMG?`<div class="aiphoto">${st.photoUrl?`<img src="${st.photoUrl}" alt="Foto de tu comida">`:''}<label class="pillbtn filebtn">${st.photoUrl?'Cambiar la foto':'Foto del plato'}<input type="file" id="aiphoto" accept="${esc((SAMPLE_IMG.mediaTypes||['image/jpeg','image/png']).join(','))}" hidden></label>${st.photoUrl?'<span class="hint">Añade abajo lo que no se vea (p. ej. «con aceite», «200 g de arroz»).</span>':''}</div>`:''}
+  const st=SH.st;SH.title.textContent='Escribe lo que has comido';
+  SH.body.innerHTML=`<p class="hint" style="margin:0">Escríbelo como se lo contarías a alguien. Claude lo convierte en alimentos con sus gramos y tú lo revisas antes de guardarlo.</p>
+  ${SAMPLE_IMG?'<div class="btnrow"><button class="pillbtn" data-snap="1">¿Tienes una foto? Analízala</button></div>':''}
   <textarea id="aitext" class="ta" rows="4" placeholder="Ej.: dos tostadas de pan integral con aceite y un café con leche. A mediodía 200 g de pollo con arroz y una manzana.">${esc(st.text||'')}</textarea>
   <div><span class="eyebrow">Si no lo indicas, se apunta en</span><div class="chips" role="group" aria-label="Comida" style="margin-top:6px">${MEALS.map(([id,l])=>`<button class="cat" data-aimeal="${id}" aria-pressed="${st.meal===id}">${l}</button>`).join('')}</div></div>
   <div id="aiout"></div>`;
@@ -2165,19 +2201,191 @@ function dishPic(f,cls){const id=f.rec?'r-'+f.rec:f.id;const ph=S.photos&&S.phot
 function photoControls(id){const has=S.photos&&S.photos[id];
   return `<div class="btnrow"><label class="pillbtn filebtn">${has?'Cambiar foto':'Hacer o subir una foto'}<input type="file" data-photo="${esc(id)}" accept="image/*" hidden></label>${has?`<button class="pillbtn" data-unphoto="${esc(id)}">Quitar foto</button>`:''}</div>`}
 
+/* ---------- Foto → macros ---------- */
+/* En la app instalable no hay Claude integrado: se puede usar la propia clave de la API de Anthropic, guardada solo en el dispositivo */
+const AIKEY_LS='diario-macros-apikey',AIMODEL='claude-sonnet-5-5';
+function getApiKey(){try{return localStorage.getItem(AIKEY_LS)||''}catch(e){return ''}}
+function apiErr(code,message,text){return {code,message,text}}
+function tolerantJSON(t){try{return JSON.parse(t)}catch(e){}const m=t.match(/```(?:json)?\s*([\s\S]*?)```/);if(m){try{return JSON.parse(m[1])}catch(e){}}
+  const a=t.search(/[\[{]/),b=Math.max(t.lastIndexOf('}'),t.lastIndexOf(']'));if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch(e){}}throw apiErr('invalid_json','json',t)}
+async function apiCall(prompt,opt={}){
+  const key=getApiKey();if(!key)throw apiErr('no_key','sin clave');
+  const content=[];const imgs=opt.images?(opt.images instanceof Blob?[opt.images]:Array.from(opt.images)):[];
+  for(const im of imgs){const d=await shrinkImage(im,1280,0.82);content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:d.split(',')[1]}})}
+  content.push({type:'text',text:typeof prompt==='string'?prompt:prompt.map(m=>m.content).join('\n\n')});
+  let res;
+  try{res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',signal:opt.signal,headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:AIMODEL,max_tokens:2500,messages:[{role:'user',content}]})})}
+  catch(e){if(e&&e.name==='AbortError')throw apiErr('cancelled','');throw apiErr('upstream_error','red')}
+  if(res.status===401||res.status===403)throw apiErr('bad_key','clave');
+  if(res.status===429||res.status===529)throw apiErr('rate_limited','límite');
+  if(!res.ok)throw apiErr('upstream_error','http '+res.status);
+  const j=await res.json();const text=(j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
+  if(!text.trim())throw apiErr('empty_completion','');
+  return {text,truncated:j.stop_reason==='max_tokens'};
+}
+function makeApiSample(){
+  const f=async(prompt,opt={})=>{const r=await apiCall(prompt,opt);if(opt.onText)try{opt.onText({text:r.text,delta:r.text})}catch(e){}return {...r,modelTierApplied:'default'}};
+  f.json=async(prompt,opt={})=>{const r=await apiCall(prompt+'\n\nResponde únicamente con el JSON, sin texto adicional.',opt);return tolerantJSON(r.text)};
+  f.limits=async()=>({maxPromptBytes:262144,images:{maxCount:1,maxInputBytes:20e6,mediaTypes:['image/jpeg','image/png','image/webp','image/gif']}});
+  f.viaKey=true;return f}
+function enableApiSample(){if(getApiKey()){SAMPLE=makeApiSample();SAMPLE_IMG={maxCount:1,mediaTypes:['image/jpeg','image/png','image/webp','image/gif']}}else{SAMPLE=null;SAMPLE_IMG=null}}
+async function testApiKey(btn){const out=document.getElementById('keyout');out.hidden=false;out.className='thinking';out.textContent='Probando la clave…';
+  try{await apiCall('Responde solo con la palabra OK.');out.className='notice ok-notice';out.textContent='La clave funciona. Ya puedes analizar fotos de tus comidas.'}
+  catch(e){out.className='notice';out.textContent=e.code==='bad_key'?'La clave no es válida o no tiene permisos. Revísala en console.anthropic.com.':e.code==='rate_limited'?'Tu cuenta de la API ha llegado a su límite. Revisa tu saldo en console.anthropic.com.':'No se ha podido conectar con Anthropic. Revisa tu conexión a internet.'}}
+function apiKeyHTML(){if(!STANDALONE)return '';const has=!!getApiKey();
+  return `<section class="card stack" style="gap:10px" id="keybox"><h2 class="sec">Análisis de fotos con IA</h2>
+  <p class="hint" style="margin:0">Para que la app reconozca tus comidas en fotos necesita una clave de la API de Anthropic (se consigue en console.anthropic.com). La clave se guarda solo en este dispositivo y cada análisis gasta un poco del saldo de esa cuenta. Las fotos se envían a Anthropic solo cuando pulsas analizar.</p>
+  ${has?`<div class="btnrow"><span class="chip ok">Clave configurada</span><button class="pillbtn" id="keytest">Probar</button><button class="pillbtn" id="keydel">Borrar clave</button></div>`:
+  `<div class="searchrow"><input class="search" id="keyin" type="password" autocomplete="off" placeholder="sk-ant-…" aria-label="Clave de la API de Anthropic"><button class="btn small" id="keysave">Guardar</button></div>`}
+  <div id="keyout" hidden></div></section>`}
+
+/* Hoja de análisis de foto */
+function snapFoodsList(){const foods=allFoods();return {foods,text:foods.map((f,i)=>`${i}|${f.n}${f.rec?' [R]':''}|${f.pl}=${Math.round(f.pg)} g`).join('\n')}}
+function snapTotals(st){const t={};NK.forEach(k=>t[k]=0);(st.res||[]).forEach(x=>{if(!x.on)return;NK.forEach((k,i)=>t[k]+=(x.f.v[i]||0)*x.g/100)});return t}
+function openSnap(meal){
+  if(!SAMPLE||!SAMPLE_IMG){if(STANDALONE){S.view='perfil';closeSheet();render();setTimeout(()=>document.getElementById('keybox')?.scrollIntoView({block:'center',behavior:'smooth'}),60);toast('Para analizar fotos, añade tu clave de la API de Anthropic.')}else toast('El análisis de fotos no está disponible en esta vista.');return}
+  const st={mode:'snap',meal:meal||(S.cur===todayKey()?defaultMeal():'comida'),photo:null,photoUrl:'',res:null,busy:false,err:'',fix:'',plato:'',supuestos:[],saveDish:false,search:null};
+  if(SH.st){st.prev=SH.st;SH.st=st;drawSheet()}else openSheet(st);
+}
+function setSnapPhoto(file){const st=SH.st;if(!st||st.mode!=='snap'||!file||!/^image\//.test(file.type||'image/')){toast('Elige una imagen (foto JPG o PNG).');return}
+  if(st.photoUrl)URL.revokeObjectURL(st.photoUrl);st.photo=file;st.photoUrl=URL.createObjectURL(file);st.res=null;st.err='';st.plato='';st.supuestos=[];runSnap()}
+function drawSnap(){
+  const st=SH.st;SH.title.textContent='Foto de tu comida';
+  if(!st.photo){
+    SH.body.innerHTML=`<label class="dropzone" id="dropzone"><input type="file" id="snapfile" accept="image/*" hidden>
+      <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="12" width="38" height="28" rx="5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M17 12l3-5h8l3 5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><circle cx="24" cy="26" r="8" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>
+      <b>Haz o elige una foto de tu comida</b><span>${coarse()?'Toca para abrir la cámara o la galería':'Haz clic, arrastra una imagen aquí o pégala con Ctrl+V'}</span></label>
+    <ol class="steps"><li>Claude reconoce cada alimento y calcula sus gramos.</li><li>Revisas el resultado: cambias, quitas o añades lo que haga falta.</li><li>Lo apuntas en tu diario con todos sus macros y micros.</li></ol>
+    <p class="hint" style="margin:0">Consejo: fotografía desde arriba y con el plato entero; un tenedor o una mano al lado ayudan a calcular el tamaño.${SAMPLE&&SAMPLE.viaKey?' La foto se envía a Anthropic con tu clave de API.':''}</p>`;
+    SH.foot.hidden=true;bindDrop();return}
+  const T=snapTotals(st),G=goalsFor(S.cur),on=st.res?st.res.filter(x=>x.on&&x.g>0):[];
+  let h=`<div class="snaphead"><img src="${st.photoUrl}" alt="Tu foto"><div class="snapinfo">${st.res?`<input class="snapname" id="snapname" type="text" value="${esc(st.plato)}" aria-label="Nombre del plato" placeholder="Nombre del plato">`:''}
+    <label class="pillbtn filebtn">Cambiar foto<input type="file" id="snapfile" accept="image/*" hidden></label></div></div>`;
+  if(st.busy)h+=`<div class="thinking">${st.fixing?'Claude está corrigiendo el análisis…':'Claude está analizando tu foto… suele tardar entre 10 y 30 segundos.'}</div>`;
+  else if(st.err)h+=`<div class="notice">${esc(st.err)}</div>`;
+  if(st.res&&!st.busy){
+    h+=`<div class="snaptot"><div><b class="num">${fmt(T.k)}</b><span>kcal · ${fmt(G.k?T.k/G.k*100:0)}%</span></div><div><b class="num mp">${fmt(T.p,1)}</b><span>proteína g</span></div><div><b class="num mc">${fmt(T.c,1)}</b><span>hidratos g</span></div><div><b class="num mf">${fmt(T.f,1)}</b><span>grasa g</span></div></div>
+    <div class="chips">${['fi','fe','ca','vc','na'].map(k=>`<span class="chip">${META[k].l} ${fmtN(k,T[k])} ${META[k].u}</span>`).join('')}</div>
+    ${st.supuestos.length?`<div class="notice" style="border-left-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--surface))"><b>Lo que Claude ha supuesto</b><ul class="sup">${st.supuestos.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>`:''}
+    <div><span class="eyebrow">Ingredientes detectados · toca un nombre para cambiarlo</span><div class="snaplist">${st.res.map((x,i)=>snapRow(x,i)).join('')}</div>
+    ${st.search&&st.search.idx===-1?snapSearchHTML():`<button class="addline" data-snapadd="1" style="border:1px dashed var(--line);border-radius:10px;margin-top:8px;width:100%">+ Añadir un ingrediente que falta</button>`}</div>
+    <div class="card stack" style="gap:8px"><span class="eyebrow">¿Algo no cuadra? Díselo a Claude</span><textarea id="snapfix" class="ta" rows="2" placeholder="Ej.: también llevaba aceite, el arroz era integral y era ración doble">${esc(st.fix)}</textarea><div><button class="pillbtn" id="snapfixgo">Corregir con Claude</button></div></div>
+    <div><span class="eyebrow">Apuntar en</span><div class="chips" role="group" aria-label="Comida" style="margin-top:6px">${MEALS.map(([id,l])=>`<button class="cat" data-snapmeal="${id}" aria-pressed="${st.meal===id}">${l}</button>`).join('')}</div></div>
+    <label class="switch"><input type="checkbox" id="snapdish" ${st.saveDish?'checked':''}> Guardar también como plato mío, con esta foto</label>`}
+  SH.body.innerHTML=h;bindDrop();
+  SH.foot.hidden=false;
+  SH.foot.innerHTML=st.busy?`<button class="btn ghost grow" id="snapstop">Parar</button>`:
+    st.res?`<button class="btn ghost" id="snaprerun">Analizar de nuevo</button><button class="btn grow" id="snapsave" ${on.length?'':'disabled'}>Añadir al diario · ${fmt(T.k)} kcal</button>`:
+    `<button class="btn grow" id="snaprerun">Analizar foto</button>`;
+}
+function snapRow(x,i){const k=x.f.v[0]*x.g/100,p=x.f.v[1]*x.g/100,step=x.g<60?5:10;
+  return `<div class="snaprow ${x.on?'':'off'}"><button class="sn" data-snapswap="${i}" title="Cambiar por otro alimento"><span>${esc(x.f.n)}</span>${x.f.est?'<em class="est">estimado</em>':''}${x.conf==='baja'?'<em class="est">dudoso</em>':''}<small>${fmt(k)} kcal · P ${fmt(p,1)} g${x.note?' · '+esc(x.note):''}</small></button>
+    <div class="gstep"><button data-snapg="${i}|-${step}" aria-label="Menos">−</button><input type="number" inputmode="decimal" min="0" step="any" data-snapgi="${i}" value="${x.g}" aria-label="Gramos de ${esc(x.f.n)}"><button data-snapg="${i}|${step}" aria-label="Más">+</button></div>
+    <button class="sdel" data-snapdel="${i}" aria-label="Quitar ${esc(x.f.n)}">✕</button></div>${SH.st.search&&SH.st.search.idx===i?snapSearchHTML():''}`}
+function snapSearchHTML(){const s=SH.st.search;const l=s.q?filterFoods(s.q,'').slice(0,8):[];
+  return `<div class="snapsearch"><div class="searchrow"><input class="search" id="snapq" type="search" placeholder="${s.idx===-1?'Busca el ingrediente que falta…':'Busca el alimento correcto…'}" value="${esc(s.q)}" autocomplete="off"><button class="pillbtn" data-snapcancel="1">Cancelar</button></div>
+  <div id="snapres">${snapResHTML(l)}</div></div>`}
+function snapResHTML(l){return l.length?`<div class="flist" style="margin-top:6px">${l.map(f=>foodRow(f,'data-snappick')).join('')}</div>`:(SH.st.search.q?'<p class="hint">Sin resultados. Prueba con otra palabra.</p>':'')}
+function bindDrop(){const z=document.getElementById('shBody');if(!z||z.dataset.dnd)return;z.dataset.dnd='1';
+  z.addEventListener('dragover',e=>{if(SH.st&&SH.st.mode==='snap'){e.preventDefault();z.classList.add('drag')}});
+  z.addEventListener('dragleave',()=>z.classList.remove('drag'));
+  z.addEventListener('drop',e=>{if(!SH.st||SH.st.mode!=='snap')return;e.preventDefault();z.classList.remove('drag');const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f)setSnapPhoto(f)})}
+document.addEventListener('paste',e=>{if(!SH.st||SH.st.mode!=='snap'||SH.st.busy)return;const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(i=>i.type.startsWith('image/'));if(it){e.preventDefault();setSnapPhoto(it.getAsFile())}});
+async function runSnap(fixText){
+  const st=SH.st;if(!st||!st.photo||!SAMPLE)return;
+  const {foods,text}=snapFoodsList();st.foods=foods;st.busy=true;st.fixing=!!fixText;st.err='';const ctl=new AbortController();st.ctl=ctl;drawSnap();
+  const prev=fixText&&st.res?st.res.filter(x=>x.on).map(x=>`- ${x.f.n}: ${Math.round(x.g)} g`).join('\n'):'';
+  const prompt=`Eres un dietista experto en estimar raciones a partir de fotos, para una app de nutrición en español de España. La imagen es una foto de una comida. Identifica cada alimento visible y estima sus gramos.
+
+Alimentos disponibles (índice|nombre|ración típica). [R] = receta completa:
+${text}
+
+Reglas:
+- Descompón el plato en ingredientes de la lista (p. ej. arroz cocido, pollo, aceite). Usa una receta [R] solo si la foto coincide claramente con ella.
+- Para alimentos cocinados que se ven en el plato (arroz, pasta, patata, legumbres), usa la versión cocinada si existe; si solo existe la cruda, calcula el peso en crudo equivalente.
+- Estima los gramos por el tamaño del plato (unos 26 cm), los cubiertos, la mano o el envase si se ven. Sé realista con raciones españolas.
+- Incluye el aceite o las salsas cuando se aprecian brillos, fritura o aliño, y dilo en "supuestos".
+- Si algo no está en la lista, ponlo en "nuevos" con valores estimados por 100 g: k (kcal), p, c (hidratos sin fibra), f, fi, su, sf en g y na (sodio) en mg.
+- "conf" es tu confianza en cada alimento: "alta", "media" o "baja".
+- "supuestos": 1 a 4 frases muy cortas con lo que no se ve seguro (aceite, salsa, tamaño, ingredientes ocultos).
+- Si la imagen no muestra comida, devuelve {"error":"no es comida"}.
+${fixText?`
+Ya hiciste un primer análisis:
+${prev||'(vacío)'}
+El usuario lo corrige así: """${fixText.slice(0,800)}"""
+Rehaz la lista completa aplicando su corrección; lo que diga el usuario manda sobre la foto.`:''}
+
+Responde solo con JSON, así:
+{"plato":"Nombre corto del plato","items":[{"i":12,"g":150,"conf":"alta"}],"nuevos":[{"name":"Salsa de yogur","g":30,"conf":"media","k":120,"p":3,"c":5,"f":10,"fi":0,"su":4,"sf":2,"na":300}],"supuestos":["Calculo una cucharada de aceite"]}`;
+  try{
+    const r=await SAMPLE.json(prompt,{images:st.photo,signal:ctl.signal});
+    if(SH.st!==st)return;
+    if(!r||r.error){st.err='No he reconocido comida en la foto. Prueba con otra foto más cerca, desde arriba y con buena luz.';st.res=null}
+    else{
+      const out=[],conf=c=>['alta','media','baja'].includes(c)?c:'media';
+      (Array.isArray(r.items)?r.items:[]).forEach(x=>{const f=foods[parseInt(x.i)];const g=+x.g;if(f&&g>0&&g<3000)out.push({f,g:Math.round(g),on:true,conf:conf(x.conf)})});
+      (Array.isArray(r.nuevos)?r.nuevos:[]).forEach(x=>{const g=+x.g;if(!x||!x.name||!(g>0&&g<3000))return;const v=NK.map(k=>Math.max(0,Math.min(5000,+x[k]||0)));out.push({f:{id:'ai-'+uid(),n:String(x.name).slice(0,80),cat:'ot',v,pg:g,pl:'ración',est:true},g:Math.round(g),on:true,conf:conf(x.conf)})});
+      st.res=out;st.plato=String(r.plato||'').slice(0,80);st.supuestos=(Array.isArray(r.supuestos)?r.supuestos:[]).map(s=>String(s).slice(0,160)).slice(0,4);
+      if(fixText)st.fix='';
+      if(!out.length)st.err='No he podido identificar los alimentos. Añádelos a mano o prueba con otra foto.';
+      if(!out.length)st.res=[];
+    }
+  }catch(e){if(SH.st!==st)return;st.err=e&&e.code==='cancelled'?'':e&&e.code==='bad_key'?'Tu clave de la API no es válida. Revísala en Perfil y objetivos.':e&&e.code==='no_key'?'Añade tu clave de la API en Perfil y objetivos.':sampleMsg(e)}
+  st.busy=false;st.fixing=false;if(SH.st===st)drawSnap();
+}
+async function saveSnap(){
+  const st=SH.st,on=st.res.filter(x=>x.on&&x.g>0);if(!on.length)return;
+  const name=(document.getElementById('snapname')?.value||st.plato||'').trim();
+  on.forEach(x=>addEntry(x.f.est?{...x.f,n:x.f.n+' (estimado)'}:x.f,x.g,st.meal,S.cur));
+  if(st.saveDish){
+    const w=on.reduce((a,x)=>a+x.g,0),tot=NK.map(()=>0);on.forEach(x=>x.f.v.forEach((v,i)=>tot[i]+=v*x.g/100));
+    const id='u-'+uid();S.foods.unshift({id,n:name||'Mi plato',cat:'pl',v:tot.map(x=>Math.round(x/w*100*100)/100),pg:Math.round(w),pl:'1 ración',ing:on.map(x=>({fid:x.f.id,name:x.f.n,g:x.g,b:x.f.v.slice()})),serv:1,cooked:0});saveFoods();
+    try{S.photos[id]=await shrinkImage(st.photo);savePhoto(id)}catch(e){}
+  }
+  const n=on.length;closeSheet();S.view='hoy';render();toast(`${n} ${n===1?'alimento añadido':'alimentos añadidos'} a ${mealLabel(st.meal).toLowerCase()}${st.saveDish?' y guardado como plato':''}`);
+}
+function snapClick(t,ds){
+  const st=SH.st;if(!st||st.mode!=='snap')return false;
+  if(t.id==='snaprerun'){runSnap();return true}
+  if(t.id==='snapstop'){st.ctl&&st.ctl.abort();return true}
+  if(t.id==='snapsave'){saveSnap();return true}
+  if(t.id==='snapfixgo'){const v=(document.getElementById('snapfix').value||'').trim();if(!v){toast('Escribe qué hay que corregir.');return true}st.fix=v;runSnap(v);return true}
+  if(ds.snapmeal){st.meal=ds.snapmeal;SH.body.querySelectorAll('[data-snapmeal]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.snapmeal===st.meal));return true}
+  if(ds.snapdel!==undefined){st.res.splice(+ds.snapdel,1);st.search=null;drawSnap();return true}
+  if(ds.snapg){const [i,d]=ds.snapg.split('|').map(Number);const x=st.res[i];x.g=Math.max(0,Math.round((x.g+d)/Math.abs(d))*Math.abs(d));drawSnap();return true}
+  if(ds.snapswap!==undefined){const i=+ds.snapswap;st.search={idx:i,q:norm(st.res[i].f.n).split(/[ (]/)[0]};drawSnap();focusSnapQ();return true}
+  if(ds.snapadd){st.search={idx:-1,q:''};drawSnap();focusSnapQ();return true}
+  if(ds.snapcancel){st.search=null;drawSnap();return true}
+  if(ds.snappick){const f=findFood(ds.snappick);if(!f)return true;const s=st.search;
+    if(s.idx===-1)st.res.push({f,g:Math.round(f.pg),on:true,conf:'alta'});else{st.res[s.idx].f=f;st.res[s.idx].conf='alta'}
+    st.search=null;drawSnap();return true}
+  return false}
+function focusSnapQ(){const q=document.getElementById('snapq');if(q){q.focus();const v=q.value;q.value='';q.value=v}}
+function snapInput(el){const st=SH.st;if(!st||st.mode!=='snap')return false;
+  if(el.id==='snapq'){st.search.q=el.value;document.getElementById('snapres').innerHTML=snapResHTML(el.value?filterFoods(el.value,'').slice(0,8):[]);return true}
+  if(el.id==='snapfix'){st.fix=el.value;return true}
+  if(el.id==='snapname'){st.plato=el.value;return true}
+  return false}
+function snapChange(el){const st=SH.st;if(!st||st.mode!=='snap')return false;
+  if(el.id==='snapfile'){const f=el.files&&el.files[0];if(f)setSnapPhoto(f);el.value='';return true}
+  if(el.dataset.snapgi!==undefined){const g=parseFloat(String(el.value).replace(',','.'));if(g>=0){st.res[+el.dataset.snapgi].g=Math.round(g)}drawSnap();return true}
+  if(el.id==='snapdish'){st.saveDish=el.checked;return true}
+  return false}
+
 /* ---------- Hoja modal ---------- */
 const SH={el:document.getElementById('sheet'),body:document.getElementById('shBody'),foot:document.getElementById('shFoot'),title:document.getElementById('shTitle'),back:document.getElementById('shBack'),st:null};
 const coarse=()=>matchMedia('(pointer:coarse)').matches;
 function openSheet(st){SH.st=st;SH.el.hidden=false;document.body.style.overflow='hidden';drawSheet()}
 function closeSheet(){SH.el.hidden=true;SH.st=null;document.body.style.overflow=''}
 function drawSheet(){const st=SH.st;SH.back.hidden=!st.prev;SH.foot.hidden=true;SH.foot.innerHTML='';SH.body.scrollTop=0;
-  ({pick:drawPick,detail:drawDetail,form:drawForm,nut:drawNut,recipe:drawRecipe,ai:drawAI,rview:drawRView,fill:drawFill,quick:drawQuick})[st.mode]()}
+  ({pick:drawPick,detail:drawDetail,form:drawForm,nut:drawNut,recipe:drawRecipe,ai:drawAI,rview:drawRView,fill:drawFill,quick:drawQuick,snap:drawSnap})[st.mode]()}
 function recents(){const seen=new Set(),out=[];Object.keys(S.days).sort().reverse().forEach(k=>dayEntries(k).slice().reverse().forEach(e=>{if(out.length<8&&!seen.has(e.fid)){seen.add(e.fid);const f=findFood(e.fid);if(f)out.push(f)}}));return out}
 function drawPick(){
   const st=SH.st;SH.title.textContent='Añadir a '+mealLabel(st.meal).toLowerCase();
   SH.body.innerHTML=`<div class="chips" role="group" aria-label="Comida">${MEALS.map(([id,l])=>`<button class="cat" data-pmeal="${id}" aria-pressed="${st.meal===id}">${l}</button>`).join('')}</div>
   <div class="searchrow"><input class="search" id="pq" type="search" placeholder="Buscar alimento…" value="${esc(st.q||'')}" autocomplete="off"></div>
-  <div class="btnrow">${SAMPLE?'<button class="pillbtn" data-aiopen="1">Escribir lo que comí</button>':''}<button class="pillbtn" data-quick="1">Añadir rápido (kcal)</button><button class="pillbtn" data-newrecipefrom="1">+ Crear plato</button></div>
+  <div class="btnrow">${(SAMPLE&&SAMPLE_IMG)||STANDALONE?'<button class="btn small" data-snap="1">Foto de tu comida</button>':''}${SAMPLE?'<button class="pillbtn" data-aiopen="1">Escribir lo que comí</button>':''}<button class="pillbtn" data-quick="1">Añadir rápido (kcal)</button><button class="pillbtn" data-newrecipefrom="1">+ Crear plato</button></div>
   ${catChips(st.cat||'','data-pcat')}<div id="plist"></div>`;
   const i=document.getElementById('pq');i.addEventListener('input',()=>{st.q=i.value;drawPickList()});
   drawPickList();if(!coarse())i.focus();
@@ -2302,7 +2510,7 @@ document.addEventListener('click',ev=>{
   if(t.id==='exportCsv'){exportCsv();return}
   if(t.id==='undo'&&lastDeleted){const {key,entry,idx}=lastDeleted;const d=dayObj(key);d.entries.splice(Math.min(idx,d.entries.length),0,entry);saveDay(key);lastDeleted=null;document.getElementById('toast').hidden=true;render();return}
   // a partir de aquí se modifican datos
-  const writes=t.id==='fab'||ds.add||ds.edit||ds.repeat||ds.dtype||ds.water||ds.food||t.id==='newFood'||t.id==='newRecipe'||t.id==='wsave'||ds.wdel||ds.psex||ds.pact||ds.pgoal||ds.pweek||t.id==='resetProfile'||ds.nut;
+  const writes=ds.snap||t.id==='fab'||ds.add||ds.edit||ds.repeat||ds.dtype||ds.water||ds.food||t.id==='newFood'||t.id==='newRecipe'||t.id==='wsave'||ds.wdel||ds.psex||ds.pact||ds.pgoal||ds.pweek||t.id==='resetProfile'||ds.nut;
   if(writes&&!S.ready){toast('Cargando tus datos… un momento.');return}
   if(t.id==='fab'){if(S.view==='mes'){S.view='hoy';S.cur=todayKey();render()}openSheet({mode:'pick',meal:S.cur===todayKey()?defaultMeal():'comida',q:'',cat:''});return}
   if(ds.add){openSheet({mode:'pick',meal:ds.add,q:'',cat:''});return}
@@ -2347,6 +2555,10 @@ document.addEventListener('click',ev=>{
   if(newBtn&&!S.ready){toast('Cargando tus datos… un momento.');return}
   if(ds.rec){const r=findRecipe(ds.rec);if(!r)return;const st0={mode:'rview',id:r.id,serv:r.s,eat:1,meal:SH.st&&SH.st.meal||defaultMeal()};if(SH.st){st0.prev=SH.st;SH.st=st0;drawSheet()}else openSheet(st0);return}
   if(ds.fill){const st0={mode:'fill',meal:S.cur===todayKey()?defaultMeal():'cena'};genFill(st0);openSheet(st0);return}
+  if(ds.snap){openSnap(SH.st&&SH.st.meal);return}
+  if(t.id==='keysave'){const v=(document.getElementById('keyin').value||'').trim();if(v.length<20){toast('Pega la clave completa (empieza por sk-ant-).');return}try{localStorage.setItem(AIKEY_LS,v)}catch(e){toast('No se pudo guardar la clave en este dispositivo.');return}enableApiSample();render();setTimeout(()=>{if(document.getElementById('keyout'))testApiKey()},50);return}
+  if(t.id==='keytest'){testApiKey();return}
+  if(t.id==='keydel'){if(!armed(t,'¿Borrar?'))return;try{localStorage.removeItem(AIKEY_LS)}catch(e){}enableApiSample();render();toast('Clave borrada de este dispositivo');return}
   if(ds.aiopen){if(SH.st){SH.st={mode:'ai',meal:SH.st.meal||defaultMeal(),text:'',prev:SH.st};drawSheet()}else openSheet({mode:'ai',meal:S.cur===todayKey()?defaultMeal():'comida',text:''});return}
   if(ds.copyday){const src=dayEntries(shiftKey(S.cur,-1));const d=dayObj(S.cur);src.forEach(e=>{const n={...e,id:uid(),b:e.b.slice(),t:Date.now()};delete n.pk;d.entries.push(n)});saveDay(S.cur);render();toast(`${src.length} alimentos copiados de ayer`);return}
   if(ds.tsave){const tp=templateFromMeal(S.cur,ds.tsave);if(!tp)return;S.templates.unshift(tp);saveTemplates();toast('Guardada. La encontrarás arriba al añadir comida.');return}
@@ -2360,6 +2572,7 @@ document.addEventListener('click',ev=>{
   if(t.id==='shBack'&&SH.st&&SH.st.prev){SH.st=SH.st.prev;drawSheet();return}
   if(!SH.st)return;
   const st=SH.st;
+  if(snapClick(t,ds))return;
   if(ds.pmeal){st.meal=ds.pmeal;drawPick();return}
   if(ds.quick){SH.st={mode:'quick',meal:st.meal||defaultMeal(),prev:st};drawSheet();return}
   if(ds.tuse){const tp=S.templates.find(x=>x.id===ds.tuse);if(!tp)return;tp.items.forEach(i=>addEntry({id:i.fid,n:i.name,v:i.b},i.g,st.meal||tp.meal,S.cur));closeSheet();S.view='hoy';render();toast(`${tp.items.length} alimentos añadidos`);return}
@@ -2405,6 +2618,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!SH.el.hidden)close
 document.addEventListener('toggle',e=>{const c=e.target.classList;if(!c)return;if(c.contains('micros'))localSet('microsOpen',e.target.open?'1':'0');if(c.contains('planpanel'))localSet('planOpen',e.target.open?'1':'0');if(c.contains('badges'))localSet('badgesOpen',e.target.open?'1':'0')},true);
 document.addEventListener('change',e=>{
   const el=e.target;
+  if(snapChange(el))return;
   if(el.id==='mnut'){S.mnut=el.value;el.blur();render();return}
   if(el.id==='fsort'){S.sort=el.value;document.getElementById('flist').innerHTML=foodListHTML();return}
   if(el.id==='dstart'){if(el.value){S.dstart=el.value;S.dtype=''}render();return}
@@ -2428,6 +2642,7 @@ document.addEventListener('change',e=>{
 });
 document.addEventListener('input',e=>{
   const el=e.target,ds=el.dataset||{};
+  if(snapInput(el))return;
   if(el.id==='fq'){S.q=el.value;document.getElementById('flist').innerHTML=foodListHTML();return}
   if(el.id==='rq'){S.rq=el.value;document.getElementById('rlist').innerHTML=recipeListHTML();return}
   if(el.id==='dnote'){if(!S.ready)return;const k=S.cur;dayObj(k).note=el.value.slice(0,1000);clearTimeout(saveDay.h);saveDay.h=setTimeout(()=>saveDay(k),800);return}
