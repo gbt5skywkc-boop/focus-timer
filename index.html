@@ -1395,7 +1395,7 @@ function viewMonth(){
     <div class="card stat"><div class="v num">${wchg===null?'—':(wchg>0?'+':'')+fmt(wchg,1)}<small>${wchg===null?'':'kg'}</small></div><div class="l">${wchg===null?'apunta tu peso para verlo':'cambio de peso este mes'}</div></div>
   </div>
   ${badgesHTML()}
-  ${SAMPLE&&n>=3?`<section class="card"><div class="listhead"><h2 class="sec">Análisis de Claude</h2><button class="btn small" id="aimonth">${S.aiMonth[m]?'Analizar de nuevo':'Analizar mi mes'}</button></div><div id="aimonthout" class="aitext">${S.aiMonth[m]?mdLite(S.aiMonth[m]):'<p class="hint">Claude revisa tus medias, tus objetivos y lo que más comes, y te propone 3 cambios concretos. Usa tu cuenta de Claude.</p>'}</div></section>`:''}
+  ${SAMPLE&&n>=3?`<section class="card"><div class="listhead"><h2 class="sec">Análisis de ${aiName()==='IA'?'la IA':aiName()}</h2><button class="btn small" id="aimonth">${S.aiMonth[m]?'Analizar de nuevo':'Analizar mi mes'}</button></div><div id="aimonthout" class="aitext">${S.aiMonth[m]?mdLite(S.aiMonth[m]):'<p class="hint">Claude revisa tus medias, tus objetivos y lo que más comes, y te propone 3 cambios concretos. Usa tu cuenta de Claude.</p>'}</div></section>`:''}
   <section class="card"><div class="listhead"><h2 class="sec">Calendario</h2><span class="hint">Toca un día para abrirlo</span></div><div style="height:10px"></div><div class="cal">${cal}</div>
     <div class="callegend"><span><i style="background:color-mix(in srgb,var(--accent) 14%,var(--surface))"></i>&lt;50%</span><span><i style="background:color-mix(in srgb,var(--accent) 32%,var(--surface))"></i>50–80%</span><span><i style="background:color-mix(in srgb,var(--accent) 58%,var(--surface))"></i>80–110%</span><span><i style="background:color-mix(in srgb,var(--carb) 55%,var(--surface))"></i>&gt;110% del objetivo de kcal</span></div>${(()=>{const ds=keys.map(k=>S.days[k]).filter(Boolean),en=ds.filter(d=>d.energy),sl=ds.filter(d=>d.sleep);return en.length||sl.length?`<p class="hint" style="margin:8px 0 0">${en.length?`Energía media ${fmt(en.reduce((a,d)=>a+d.energy,0)/en.length,1)} de 5 (${en.length} días)`:''}${en.length&&sl.length?' · ':''}${sl.length?`Sueño medio ${fmt(sl.reduce((a,d)=>a+d.sleep,0)/sl.length,1)} h`:''}</p>`:''})()}</section>
   <section class="card"><div class="listhead"><h2 class="sec">${esc(META[nut].l)} por día</h2><select class="sel" id="mnut" aria-label="Nutriente de la gráfica">${NK.map(x=>`<option value="${x}" ${x===nut?'selected':''}>${META[x].l}</option>`).join('')}</select></div><div style="height:8px"></div>${svg}<p class="hint" style="margin:6px 0 0">Las marcas horizontales son tu objetivo de cada día (cambia según sea descanso, entreno o partido).</p></section>
@@ -1782,8 +1782,7 @@ async function initSample(){
   if(SAMPLE&&SH.st&&SH.st.mode==='pick')drawPick();
 }
 function sampleMsg(e){const c=e&&e.code;
-  if(c==='bad_key')return 'Tu clave de la API no es válida. Revísala en Perfil y objetivos.';
-  if(c==='no_key')return 'Añade tu clave de la API en Perfil y objetivos.';
+  if(SAMPLE&&SAMPLE.viaKey||['bad_key','no_key','no_credit','model_missing'].includes(c))return aiErrText(e);
   if(['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].includes(c)){SAMPLE=null;return 'Claude no está disponible en esta página (o no le has dado permiso). Puedes seguir usando la app sin esta función.'}
   if(c==='images_unavailable'){SAMPLE_IMG=null;return 'En esta vista no se pueden enviar fotos.'}
   if(c==='image_rejected')return 'No he podido usar esa imagen. Prueba con otra foto (JPG o PNG) más nítida.';
@@ -1795,7 +1794,7 @@ function mdLite(t){let h='',inList=false;t.split(/\n+/).map(l=>l.trim()).filter(
 
 function drawAI(){
   const st=SH.st;SH.title.textContent='Escribe lo que has comido';
-  SH.body.innerHTML=`<p class="hint" style="margin:0">Escríbelo como se lo contarías a alguien. Claude lo convierte en alimentos con sus gramos y tú lo revisas antes de guardarlo.</p>
+  SH.body.innerHTML=`<p class="hint" style="margin:0">Escríbelo como se lo contarías a alguien. ${aiName()==='IA'?'La IA':aiName()} lo convierte en alimentos con sus gramos y tú lo revisas antes de guardarlo.</p>
   ${SAMPLE_IMG?'<div class="btnrow"><button class="pillbtn" data-snap="1">¿Tienes una foto? Analízala</button></div>':''}
   <textarea id="aitext" class="ta" rows="4" placeholder="Ej.: dos tostadas de pan integral con aceite y un café con leche. A mediodía 200 g de pollo con arroz y una manzana.">${esc(st.text||'')}</textarea>
   <div><span class="eyebrow">Si no lo indicas, se apunta en</span><div class="chips" role="group" aria-label="Comida" style="margin-top:6px">${MEALS.map(([id,l])=>`<button class="cat" data-aimeal="${id}" aria-pressed="${st.meal===id}">${l}</button>`).join('')}</div></div>
@@ -1807,7 +1806,7 @@ function drawAI(){
   if(!st.busy&&!st.res&&!coarse())document.getElementById('aitext').focus();
 }
 function drawAIOut(){const st=SH.st,el=document.getElementById('aiout');if(!el)return;
-  if(st.busy){el.innerHTML='<div class="thinking">Claude está leyendo tu comida…</div>';return}
+  if(st.busy){el.innerHTML='<div class="thinking">'+aiName()+' está leyendo tu comida…</div>';return}
   if(st.err){el.innerHTML=`<div class="notice">${esc(st.err)}</div>`;return}
   if(!st.res){el.innerHTML='';return}
   const tot=st.res.filter(x=>x.on).reduce((a,x)=>{a.k+=x.f.v[0]*x.g/100;a.p+=x.f.v[1]*x.g/100;return a},{k:0,p:0});
@@ -1815,7 +1814,7 @@ function drawAIOut(){const st=SH.st,el=document.getElementById('aiout');if(!el)r
   ${st.res.some(x=>x.f.est)?'<p class="hint" style="margin:6px 0 0">Los alimentos marcados como estimados no estaban en la base: sus valores son una aproximación de Claude.</p>':''}`}
 async function runAI(){
   const st=SH.st,text=(st.text||'').trim();if(text.length<3&&!st.photo){toast('Escribe primero qué has comido o haz una foto.');return}
-  if(!SAMPLE){toast('Claude no está disponible en esta página.');return}
+  if(!SAMPLE){toast(STANDALONE?'Conecta un proveedor de IA en Perfil y objetivos.':'Claude no está disponible en esta página.');return}
   const foods=allFoods();st.foods=foods;st.busy=true;st.res=null;st.err='';const ctl=new AbortController();st.ctl=ctl;drawAI();
   const list=foods.map((f,i)=>`${i}|${f.n}|${f.pl}=${Math.round(f.pg)} g`).join('\n');
   const prompt=`Eres un asistente para apuntar comidas en una app de nutrición en español de España. Convierte la descripción del usuario en alimentos con gramos.
@@ -1845,7 +1844,7 @@ ${st.photo?'Además tienes una FOTO de la comida: identifica cada alimento que s
   st.busy=false;if(SH.st===st)drawAI();
 }
 async function readLabel(file){
-  const st=SH.st,out=document.getElementById('lblstat');if(!out||!SAMPLE)return;out.hidden=false;out.className='thinking';out.textContent='Claude está leyendo la etiqueta…';
+  const st=SH.st,out=document.getElementById('lblstat');if(!out||!SAMPLE)return;out.hidden=false;out.className='thinking';out.textContent=aiName()+' está leyendo la etiqueta…';
   const prompt=`La imagen es la etiqueta de un alimento envasado. Lee la tabla de información nutricional y devuelve solo JSON con los valores POR 100 g (o por 100 ml):
 {"name":"nombre del producto si se ve, si no null","k":kcal,"p":proteínas en g,"c":hidratos de carbono en g (sin contar la fibra),"f":grasas en g,"fi":fibra en g,"su":azúcares en g,"sf":grasas saturadas en g,"na":sodio en mg,"pg":gramos de una ración si la etiqueta la indica o null,"pl":"nombre de esa ración (p. ej. '1 yogur') o null","extra":{"kk":potasio mg,"ca":calcio mg,"fe":hierro mg,"mg":magnesio mg,"zn":zinc mg,"vc":vitamina C mg,"va":vitamina A µg,"vd":vitamina D µg,"b12":vitamina B12 µg,"fo":folato µg}}
 Si la etiqueta da "sal" en gramos, convierte a sodio: sodio en mg = sal en g × 400. Si solo hay valores por ración, calcula los de 100 g. Usa null en lo que no aparezca. Si la imagen no es una etiqueta nutricional, devuelve {"error":"no es una etiqueta"}.`;
@@ -1884,7 +1883,7 @@ Alimentos que más energía aportan: ${top}.`;
 async function runMonthAI(btn){
   if(!SAMPLE)return;const m=S.month,out=document.getElementById('aimonthout');
   if(AIMCTL){AIMCTL.abort();AIMCTL=null;return}
-  const ctl=new AbortController();AIMCTL=ctl;btn.textContent='Parar';out.innerHTML='<div class="thinking">Claude está revisando tu mes…</div>';
+  const ctl=new AbortController();AIMCTL=ctl;btn.textContent='Parar';out.innerHTML='<div class="thinking">'+aiName()+' está revisando tu mes…</div>';
   const prompt=`Eres un dietista-nutricionista deportivo. Analiza el registro mensual de esta persona y dale recomendaciones prácticas, en español de España, con tono cercano y directo.
 
 ${monthSummaryForAI()}
@@ -2201,50 +2200,124 @@ function dishPic(f,cls){const id=f.rec?'r-'+f.rec:f.id;const ph=S.photos&&S.phot
 function photoControls(id){const has=S.photos&&S.photos[id];
   return `<div class="btnrow"><label class="pillbtn filebtn">${has?'Cambiar foto':'Hacer o subir una foto'}<input type="file" data-photo="${esc(id)}" accept="image/*" hidden></label>${has?`<button class="pillbtn" data-unphoto="${esc(id)}">Quitar foto</button>`:''}</div>`}
 
-/* ---------- Foto → macros ---------- */
-/* En la app instalable no hay Claude integrado: se puede usar la propia clave de la API de Anthropic, guardada solo en el dispositivo */
-const AIKEY_LS='diario-macros-apikey',AIMODEL='claude-sonnet-5-5';
-function getApiKey(){try{return localStorage.getItem(AIKEY_LS)||''}catch(e){return ''}}
+/* ---------- IA externa para la app independiente (sin Claude integrado) ----------
+   El usuario elige proveedor y pone su propia clave; todo se guarda solo en el dispositivo. */
+const AI_LS='diario-macros-ai',AIKEY_LS='diario-macros-apikey';
+const PROVS={
+  gemini:{n:'Google Gemini',short:'Gemini',def:'gemini-flash-latest',keyUrl:'aistudio.google.com',keyPh:'AIza…',
+    help:'Crea la clave gratis en aistudio.google.com (botón "Get API key"). Tiene un nivel gratuito con un límite de peticiones al día. Ojo: en el nivel gratuito Google puede usar lo que envías, fotos incluidas, para mejorar sus productos.'},
+  anthropic:{n:'Anthropic Claude',short:'Claude',def:'claude-sonnet-5-5',keyUrl:'console.anthropic.com',keyPh:'sk-ant-…',
+    help:'Crea la clave en console.anthropic.com. Es de pago por uso: cada foto gasta un poco del saldo de tu cuenta. Anthropic no usa los datos de la API para entrenar sus modelos.'},
+  openai:{n:'OpenAI u otro compatible',short:'IA',def:'',keyUrl:'platform.openai.com',keyPh:'sk-…',
+    help:'Para OpenAI crea la clave en platform.openai.com (pago por uso). También vale cualquier servicio compatible con la API de OpenAI que tenga modelos con visión: cambia la dirección base. Si dejas el modelo vacío, la app elige uno sola.'}
+};
+function aiCfg(){let c=null;try{c=JSON.parse(localStorage.getItem(AI_LS)||'null')}catch(e){}
+  if(!c){let k='';try{k=localStorage.getItem(AIKEY_LS)||''}catch(e){}if(k)c={prov:'anthropic',key:k,model:''}}
+  return c||{prov:'gemini',key:'',model:''}}
+function setAiCfg(c){try{localStorage.setItem(AI_LS,JSON.stringify(c));localStorage.removeItem(AIKEY_LS);return true}catch(e){return false}}
+function getApiKey(){return aiCfg().key||''}
+function aiName(){if(SAMPLE&&SAMPLE.viaKey){const c=aiCfg();return (PROVS[c.prov]||PROVS.gemini).short}return 'Claude'}
 function apiErr(code,message,text){return {code,message,text}}
 function tolerantJSON(t){try{return JSON.parse(t)}catch(e){}const m=t.match(/```(?:json)?\s*([\s\S]*?)```/);if(m){try{return JSON.parse(m[1])}catch(e){}}
   const a=t.search(/[\[{]/),b=Math.max(t.lastIndexOf('}'),t.lastIndexOf(']'));if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch(e){}}throw apiErr('invalid_json','json',t)}
-async function apiCall(prompt,opt={}){
-  const key=getApiKey();if(!key)throw apiErr('no_key','sin clave');
+async function getJSON(url,opt){let r;try{r=await fetch(url,opt)}catch(e){if(e&&e.name==='AbortError')throw apiErr('cancelled','');throw apiErr('upstream_error','red')}
+  let j=null;try{j=await r.json()}catch(e){}return {r,j}}
+function httpErr(r,j){const msg=JSON.stringify(j||{}).toLowerCase();
+  if(r.status===401||r.status===403||/api_key_invalid|invalid api key|invalid x-api-key|incorrect api key/.test(msg))return apiErr('bad_key','clave');
+  if(r.status===404||/model.*(not found|not_found|does not exist)|not supported for generatecontent/.test(msg))return apiErr('model_missing','modelo');
+  if(r.status===429||r.status===529)return apiErr('rate_limited','límite');
+  if(r.status===402||/credit|billing|insufficient|quota/.test(msg))return apiErr('no_credit','saldo');
+  return apiErr('upstream_error','http '+r.status)}
+/* Busca un modelo disponible con visión si el configurado no existe */
+async function discoverModel(c){
+  if(c.prov==='gemini'){const {r,j}=await getJSON('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key='+encodeURIComponent(c.key));if(!r.ok)throw httpErr(r,j);
+    const ms=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')).map(m=>m.name.replace(/^models\//,''))
+      .filter(n=>/^gemini/.test(n)&&!/image|tts|live|audio|embed|computer|thinking-exp|learnlm|robotics/.test(n));
+    const score=n=>(/flash/.test(n)?100:0)+(/lite/.test(n)?-20:0)+(/preview|exp/.test(n)?-15:0)+(/latest/.test(n)?5:0)+parseFloat((n.match(/gemini-(\d+(?:\.\d+)?)/)||[0,0])[1])*3;
+    ms.sort((a,b)=>score(b)-score(a));if(!ms.length)throw apiErr('model_missing','sin modelos');return ms[0]}
+  if(c.prov==='anthropic'){const {r,j}=await getJSON('https://api.anthropic.com/v1/models?limit=100',{headers:{'x-api-key':c.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}});if(!r.ok)throw httpErr(r,j);
+    const ids=(j.data||[]).map(m=>m.id);const pick=ids.find(i=>/sonnet/.test(i))||ids.find(i=>/opus/.test(i))||ids[0];if(!pick)throw apiErr('model_missing','sin modelos');return pick}
+  const base=(c.base||'https://api.openai.com/v1').replace(/\/+$/,'');
+  const {r,j}=await getJSON(base+'/models',{headers:{authorization:'Bearer '+c.key}});if(!r.ok)throw httpErr(r,j);
+  const ids=(j.data||[]).map(m=>m.id).filter(i=>!/audio|realtime|tts|transcri|whisper|embed|image|dall|search|moderation|davinci|babbage|codex|instruct/.test(i));
+  const score=i=>(/mini/.test(i)?40:0)+(/gpt|vision|vl|llava|gemma|qwen|llama.*vision/.test(i)?30:0)+(/nano/.test(i)?-10:0)+parseFloat((i.match(/(\d+(?:\.\d+)?)/)||[0,0])[1]);
+  ids.sort((a,b)=>score(b)-score(a));if(!ids.length)throw apiErr('model_missing','sin modelos');return ids[0]}
+async function callProvider(c,model,content,jsonMode,signal){
+  if(c.prov==='gemini'){
+    const parts=content.map(x=>x.type==='image'?{inline_data:{mime_type:'image/jpeg',data:x.data}}:{text:x.text});
+    const {r,j}=await getJSON(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(c.key)}`,{method:'POST',signal,headers:{'content-type':'application/json'},
+      body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:{temperature:0.2,maxOutputTokens:4096,...(jsonMode?{responseMimeType:'application/json'}:{})}})});
+    if(!r.ok)throw httpErr(r,j);
+    const cand=(j.candidates||[])[0];if(!cand){if(j.promptFeedback&&j.promptFeedback.blockReason)throw apiErr('refused','bloqueado');throw apiErr('empty_completion','')}
+    return {text:((cand.content&&cand.content.parts)||[]).map(p=>p.text||'').join(''),truncated:cand.finishReason==='MAX_TOKENS'}}
+  if(c.prov==='anthropic'){
+    const cont=content.map(x=>x.type==='image'?{type:'image',source:{type:'base64',media_type:'image/jpeg',data:x.data}}:{type:'text',text:x.text});
+    const {r,j}=await getJSON('https://api.anthropic.com/v1/messages',{method:'POST',signal,headers:{'content-type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model,max_tokens:2500,messages:[{role:'user',content:cont}]})});
+    if(!r.ok)throw httpErr(r,j);
+    return {text:(j.content||[]).filter(x=>x.type==='text').map(x=>x.text).join(''),truncated:j.stop_reason==='max_tokens'}}
+  const base=(c.base||'https://api.openai.com/v1').replace(/\/+$/,'');
+  const cont=content.map(x=>x.type==='image'?{type:'image_url',image_url:{url:'data:image/jpeg;base64,'+x.data}}:{type:'text',text:x.text});
+  const {r,j}=await getJSON(base+'/chat/completions',{method:'POST',signal,headers:{'content-type':'application/json',authorization:'Bearer '+c.key},
+    body:JSON.stringify({model,messages:[{role:'user',content:cont}],max_completion_tokens:2500,...(jsonMode?{response_format:{type:'json_object'}}:{})})});
+  if(!r.ok)throw httpErr(r,j);
+  const ch=(j.choices||[])[0];return {text:(ch&&ch.message&&ch.message.content)||'',truncated:ch&&ch.finish_reason==='length'}}
+async function apiCall(prompt,opt={},jsonMode=false){
+  const c=aiCfg();if(!c.key)throw apiErr('no_key','sin clave');
   const content=[];const imgs=opt.images?(opt.images instanceof Blob?[opt.images]:Array.from(opt.images)):[];
-  for(const im of imgs){const d=await shrinkImage(im,1280,0.82);content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:d.split(',')[1]}})}
+  for(const im of imgs){const d=await shrinkImage(im,1280,0.82);content.push({type:'image',data:d.split(',')[1]})}
   content.push({type:'text',text:typeof prompt==='string'?prompt:prompt.map(m=>m.content).join('\n\n')});
-  let res;
-  try{res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',signal:opt.signal,headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:AIMODEL,max_tokens:2500,messages:[{role:'user',content}]})})}
-  catch(e){if(e&&e.name==='AbortError')throw apiErr('cancelled','');throw apiErr('upstream_error','red')}
-  if(res.status===401||res.status===403)throw apiErr('bad_key','clave');
-  if(res.status===429||res.status===529)throw apiErr('rate_limited','límite');
-  if(!res.ok)throw apiErr('upstream_error','http '+res.status);
-  const j=await res.json();const text=(j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
-  if(!text.trim())throw apiErr('empty_completion','');
-  return {text,truncated:j.stop_reason==='max_tokens'};
-}
+  let model=c.model||c.found||PROVS[c.prov].def,res;
+  try{if(!model)throw apiErr('model_missing','vacío');res=await callProvider(c,model,content,jsonMode,opt.signal)}
+  catch(e){if(e.code!=='model_missing')throw e;
+    model=await discoverModel(c);const c2={...c,found:model};if(!c.model)setAiCfg(c2);res=await callProvider(c2,model,content,jsonMode,opt.signal)}
+  if(!res.text||!res.text.trim())throw apiErr('empty_completion','');
+  return {...res,model}}
 function makeApiSample(){
   const f=async(prompt,opt={})=>{const r=await apiCall(prompt,opt);if(opt.onText)try{opt.onText({text:r.text,delta:r.text})}catch(e){}return {...r,modelTierApplied:'default'}};
-  f.json=async(prompt,opt={})=>{const r=await apiCall(prompt+'\n\nResponde únicamente con el JSON, sin texto adicional.',opt);return tolerantJSON(r.text)};
+  f.json=async(prompt,opt={})=>{const r=await apiCall(prompt+'\n\nResponde únicamente con el JSON, sin texto adicional.',opt,true);return tolerantJSON(r.text)};
   f.limits=async()=>({maxPromptBytes:262144,images:{maxCount:1,maxInputBytes:20e6,mediaTypes:['image/jpeg','image/png','image/webp','image/gif']}});
   f.viaKey=true;return f}
 function enableApiSample(){if(getApiKey()){SAMPLE=makeApiSample();SAMPLE_IMG={maxCount:1,mediaTypes:['image/jpeg','image/png','image/webp','image/gif']}}else{SAMPLE=null;SAMPLE_IMG=null}}
-async function testApiKey(btn){const out=document.getElementById('keyout');out.hidden=false;out.className='thinking';out.textContent='Probando la clave…';
-  try{await apiCall('Responde solo con la palabra OK.');out.className='notice ok-notice';out.textContent='La clave funciona. Ya puedes analizar fotos de tus comidas.'}
-  catch(e){out.className='notice';out.textContent=e.code==='bad_key'?'La clave no es válida o no tiene permisos. Revísala en console.anthropic.com.':e.code==='rate_limited'?'Tu cuenta de la API ha llegado a su límite. Revisa tu saldo en console.anthropic.com.':'No se ha podido conectar con Anthropic. Revisa tu conexión a internet.'}}
-function apiKeyHTML(){if(!STANDALONE)return '';const has=!!getApiKey();
-  return `<section class="card stack" style="gap:10px" id="keybox"><h2 class="sec">Análisis de fotos con IA</h2>
-  <p class="hint" style="margin:0">Para que la app reconozca tus comidas en fotos necesita una clave de la API de Anthropic (se consigue en console.anthropic.com). La clave se guarda solo en este dispositivo y cada análisis gasta un poco del saldo de esa cuenta. Las fotos se envían a Anthropic solo cuando pulsas analizar.</p>
-  ${has?`<div class="btnrow"><span class="chip ok">Clave configurada</span><button class="pillbtn" id="keytest">Probar</button><button class="pillbtn" id="keydel">Borrar clave</button></div>`:
-  `<div class="searchrow"><input class="search" id="keyin" type="password" autocomplete="off" placeholder="sk-ant-…" aria-label="Clave de la API de Anthropic"><button class="btn small" id="keysave">Guardar</button></div>`}
+function aiErrText(e){const c=e&&e.code,p=(PROVS[aiCfg().prov]||PROVS.gemini);
+  if(c==='bad_key')return `La clave no es válida o no tiene permisos. Revísala en ${p.keyUrl}.`;
+  if(c==='rate_limited')return 'Has llegado al límite de peticiones de tu cuenta. Espera un rato (en el nivel gratuito de Gemini, hasta el día siguiente).';
+  if(c==='no_credit')return `Tu cuenta no tiene saldo o cuota disponible. Revísala en ${p.keyUrl}.`;
+  if(c==='model_missing')return 'No encuentro un modelo con visión disponible para tu clave. Escribe el nombre de un modelo en "Modelo".';
+  if(c==='refused')return 'El proveedor ha bloqueado esta petición. Prueba con otra foto.';
+  if(c==='no_key')return 'Configura un proveedor de IA en Perfil y objetivos.';
+  return 'No se ha podido conectar con el proveedor de IA. Revisa tu conexión a internet.'}
+async function testApiKey(){const out=document.getElementById('keyout');if(!out)return;out.hidden=false;out.className='thinking';out.textContent='Probando la conexión…';
+  try{const r=await apiCall('Responde solo con la palabra OK.');const c=aiCfg();out.className='notice ok-notice';out.textContent=`Funciona con ${PROVS[c.prov].n} (modelo ${r.model}). Ya puedes analizar fotos de tus comidas.`;
+    const st=document.getElementById('aistate');if(st)st.textContent=`Modelo: ${r.model}`}
+  catch(e){out.className='notice';out.textContent=aiErrText(e)}}
+let AIUI=null;
+function apiKeyHTML(){if(!STANDALONE)return '';const c=aiCfg(),has=!!c.key,sel=AIUI||c.prov,P=PROVS[sel];
+  return `<section class="card stack" style="gap:12px" id="keybox"><h2 class="sec">IA para analizar fotos</h2>
+  <p class="hint" style="margin:0">Esta app funciona sola, sin Claude. Para reconocer comidas en fotos conecta un modelo de IA externo con tu propia clave. La clave se guarda solo en este dispositivo y las fotos se envían al proveedor solo cuando pulsas analizar.</p>
+  ${has?`<div class="btnrow" style="align-items:center"><span class="chip ok">Conectado: ${esc(PROVS[c.prov].n)}</span><span class="hint" id="aistate">${esc(c.model?'Modelo: '+c.model:c.found?'Modelo: '+c.found:'Modelo automático')}</span></div>`:''}
+  <div class="seg" role="group" aria-label="Proveedor">${Object.entries(PROVS).map(([k,v])=>`<button data-aiprov="${k}" aria-pressed="${sel===k}">${k==='gemini'?'Gemini (gratis)':k==='anthropic'?'Claude':'OpenAI / otro'}</button>`).join('')}</div>
+  <p class="hint" style="margin:0">${esc(P.help)}</p>
+  <div class="form">
+    <label class="full">Clave de API <input id="keyin" type="password" autocomplete="off" placeholder="${has&&c.prov===sel?'•••••••• (guardada; escribe otra para cambiarla)':P.keyPh}"></label>
+    <label>Modelo (opcional) <input id="modelin" type="text" autocomplete="off" value="${esc(c.prov===sel?c.model||'':'')}" placeholder="${P.def||'automático'}"></label>
+    ${sel==='openai'?`<label>Dirección base <input id="basein" type="url" autocomplete="off" value="${esc(c.prov==='openai'&&c.base?c.base:'https://api.openai.com/v1')}"></label>`:'<span></span>'}
+  </div>
+  <div class="btnrow"><button class="btn small" id="keysave">Guardar y probar</button>${has?'<button class="pillbtn" id="keytest">Probar</button><button class="pillbtn" id="keydel">Desconectar</button>':''}</div>
   <div id="keyout" hidden></div></section>`}
+function saveAiFromForm(){
+  const c=aiCfg(),sel=AIUI||c.prov,kIn=(document.getElementById('keyin').value||'').trim(),model=(document.getElementById('modelin').value||'').trim();
+  const key=kIn||(c.prov===sel?c.key:'');if(key.length<20){toast('Pega la clave completa.');return}
+  const nc={prov:sel,key,model};if(sel==='openai'){const b=(document.getElementById('basein').value||'').trim();if(b&&!/^https?:\/\//.test(b)){toast('La dirección base debe empezar por https://');return}nc.base=b||'https://api.openai.com/v1'}
+  if(!setAiCfg(nc)){toast('No se pudo guardar en este dispositivo.');return}
+  AIUI=null;enableApiSample();render();setTimeout(testApiKey,50)}
 
+/* ---------- Foto → macros ---------- */
 /* Hoja de análisis de foto */
 function snapFoodsList(){const foods=allFoods();return {foods,text:foods.map((f,i)=>`${i}|${f.n}${f.rec?' [R]':''}|${f.pl}=${Math.round(f.pg)} g`).join('\n')}}
 function snapTotals(st){const t={};NK.forEach(k=>t[k]=0);(st.res||[]).forEach(x=>{if(!x.on)return;NK.forEach((k,i)=>t[k]+=(x.f.v[i]||0)*x.g/100)});return t}
 function openSnap(meal){
-  if(!SAMPLE||!SAMPLE_IMG){if(STANDALONE){S.view='perfil';closeSheet();render();setTimeout(()=>document.getElementById('keybox')?.scrollIntoView({block:'center',behavior:'smooth'}),60);toast('Para analizar fotos, añade tu clave de la API de Anthropic.')}else toast('El análisis de fotos no está disponible en esta vista.');return}
+  if(!SAMPLE||!SAMPLE_IMG){if(STANDALONE){S.view='perfil';closeSheet();render();setTimeout(()=>document.getElementById('keybox')?.scrollIntoView({block:'center',behavior:'smooth'}),60);toast('Para analizar fotos, conecta un proveedor de IA (Gemini tiene nivel gratuito).')}else toast('El análisis de fotos no está disponible en esta vista.');return}
   const st={mode:'snap',meal:meal||(S.cur===todayKey()?defaultMeal():'comida'),photo:null,photoUrl:'',res:null,busy:false,err:'',fix:'',plato:'',supuestos:[],saveDish:false,search:null};
   if(SH.st){st.prev=SH.st;SH.st=st;drawSheet()}else openSheet(st);
 }
@@ -2256,21 +2329,21 @@ function drawSnap(){
     SH.body.innerHTML=`<label class="dropzone" id="dropzone"><input type="file" id="snapfile" accept="image/*" hidden>
       <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="12" width="38" height="28" rx="5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M17 12l3-5h8l3 5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><circle cx="24" cy="26" r="8" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>
       <b>Haz o elige una foto de tu comida</b><span>${coarse()?'Toca para abrir la cámara o la galería':'Haz clic, arrastra una imagen aquí o pégala con Ctrl+V'}</span></label>
-    <ol class="steps"><li>Claude reconoce cada alimento y calcula sus gramos.</li><li>Revisas el resultado: cambias, quitas o añades lo que haga falta.</li><li>Lo apuntas en tu diario con todos sus macros y micros.</li></ol>
-    <p class="hint" style="margin:0">Consejo: fotografía desde arriba y con el plato entero; un tenedor o una mano al lado ayudan a calcular el tamaño.${SAMPLE&&SAMPLE.viaKey?' La foto se envía a Anthropic con tu clave de API.':''}</p>`;
+    <ol class="steps"><li>La IA reconoce cada alimento y calcula sus gramos.</li><li>Revisas el resultado: cambias, quitas o añades lo que haga falta.</li><li>Lo apuntas en tu diario con todos sus macros y micros.</li></ol>
+    <p class="hint" style="margin:0">Consejo: fotografía desde arriba y con el plato entero; un tenedor o una mano al lado ayudan a calcular el tamaño.${SAMPLE&&SAMPLE.viaKey?' La foto se envía a '+esc(PROVS[aiCfg().prov].n)+' con tu clave.':''}</p>`;
     SH.foot.hidden=true;bindDrop();return}
   const T=snapTotals(st),G=goalsFor(S.cur),on=st.res?st.res.filter(x=>x.on&&x.g>0):[];
   let h=`<div class="snaphead"><img src="${st.photoUrl}" alt="Tu foto"><div class="snapinfo">${st.res?`<input class="snapname" id="snapname" type="text" value="${esc(st.plato)}" aria-label="Nombre del plato" placeholder="Nombre del plato">`:''}
     <label class="pillbtn filebtn">Cambiar foto<input type="file" id="snapfile" accept="image/*" hidden></label></div></div>`;
-  if(st.busy)h+=`<div class="thinking">${st.fixing?'Claude está corrigiendo el análisis…':'Claude está analizando tu foto… suele tardar entre 10 y 30 segundos.'}</div>`;
+  if(st.busy)h+=`<div class="thinking">${st.fixing?aiName()+' está corrigiendo el análisis…':aiName()+' está analizando tu foto… suele tardar entre 10 y 30 segundos.'}</div>`;
   else if(st.err)h+=`<div class="notice">${esc(st.err)}</div>`;
   if(st.res&&!st.busy){
     h+=`<div class="snaptot"><div><b class="num">${fmt(T.k)}</b><span>kcal · ${fmt(G.k?T.k/G.k*100:0)}%</span></div><div><b class="num mp">${fmt(T.p,1)}</b><span>proteína g</span></div><div><b class="num mc">${fmt(T.c,1)}</b><span>hidratos g</span></div><div><b class="num mf">${fmt(T.f,1)}</b><span>grasa g</span></div></div>
     <div class="chips">${['fi','fe','ca','vc','na'].map(k=>`<span class="chip">${META[k].l} ${fmtN(k,T[k])} ${META[k].u}</span>`).join('')}</div>
-    ${st.supuestos.length?`<div class="notice" style="border-left-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--surface))"><b>Lo que Claude ha supuesto</b><ul class="sup">${st.supuestos.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>`:''}
+    ${st.supuestos.length?`<div class="notice" style="border-left-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--surface))"><b>Lo que ha supuesto ${aiName()==='IA'?'la IA':aiName()}</b><ul class="sup">${st.supuestos.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>`:''}
     <div><span class="eyebrow">Ingredientes detectados · toca un nombre para cambiarlo</span><div class="snaplist">${st.res.map((x,i)=>snapRow(x,i)).join('')}</div>
     ${st.search&&st.search.idx===-1?snapSearchHTML():`<button class="addline" data-snapadd="1" style="border:1px dashed var(--line);border-radius:10px;margin-top:8px;width:100%">+ Añadir un ingrediente que falta</button>`}</div>
-    <div class="card stack" style="gap:8px"><span class="eyebrow">¿Algo no cuadra? Díselo a Claude</span><textarea id="snapfix" class="ta" rows="2" placeholder="Ej.: también llevaba aceite, el arroz era integral y era ración doble">${esc(st.fix)}</textarea><div><button class="pillbtn" id="snapfixgo">Corregir con Claude</button></div></div>
+    <div class="card stack" style="gap:8px"><span class="eyebrow">¿Algo no cuadra? Díselo a ${aiName()==='IA'?'la IA':aiName()}</span><textarea id="snapfix" class="ta" rows="2" placeholder="Ej.: también llevaba aceite, el arroz era integral y era ración doble">${esc(st.fix)}</textarea><div><button class="pillbtn" id="snapfixgo">Corregir</button></div></div>
     <div><span class="eyebrow">Apuntar en</span><div class="chips" role="group" aria-label="Comida" style="margin-top:6px">${MEALS.map(([id,l])=>`<button class="cat" data-snapmeal="${id}" aria-pressed="${st.meal===id}">${l}</button>`).join('')}</div></div>
     <label class="switch"><input type="checkbox" id="snapdish" ${st.saveDish?'checked':''}> Guardar también como plato mío, con esta foto</label>`}
   SH.body.innerHTML=h;bindDrop();
@@ -2331,7 +2404,7 @@ Responde solo con JSON, así:
       if(!out.length)st.err='No he podido identificar los alimentos. Añádelos a mano o prueba con otra foto.';
       if(!out.length)st.res=[];
     }
-  }catch(e){if(SH.st!==st)return;st.err=e&&e.code==='cancelled'?'':e&&e.code==='bad_key'?'Tu clave de la API no es válida. Revísala en Perfil y objetivos.':e&&e.code==='no_key'?'Añade tu clave de la API en Perfil y objetivos.':sampleMsg(e)}
+  }catch(e){if(SH.st!==st)return;st.err=e&&e.code==='cancelled'?'':sampleMsg(e)}
   st.busy=false;st.fixing=false;if(SH.st===st)drawSnap();
 }
 async function saveSnap(){
@@ -2556,9 +2629,10 @@ document.addEventListener('click',ev=>{
   if(ds.rec){const r=findRecipe(ds.rec);if(!r)return;const st0={mode:'rview',id:r.id,serv:r.s,eat:1,meal:SH.st&&SH.st.meal||defaultMeal()};if(SH.st){st0.prev=SH.st;SH.st=st0;drawSheet()}else openSheet(st0);return}
   if(ds.fill){const st0={mode:'fill',meal:S.cur===todayKey()?defaultMeal():'cena'};genFill(st0);openSheet(st0);return}
   if(ds.snap){openSnap(SH.st&&SH.st.meal);return}
-  if(t.id==='keysave'){const v=(document.getElementById('keyin').value||'').trim();if(v.length<20){toast('Pega la clave completa (empieza por sk-ant-).');return}try{localStorage.setItem(AIKEY_LS,v)}catch(e){toast('No se pudo guardar la clave en este dispositivo.');return}enableApiSample();render();setTimeout(()=>{if(document.getElementById('keyout'))testApiKey()},50);return}
+  if(t.id==='keysave'){saveAiFromForm();return}
+  if(ds.aiprov){AIUI=ds.aiprov;render();document.getElementById('keybox')?.scrollIntoView({block:'nearest'});return}
   if(t.id==='keytest'){testApiKey();return}
-  if(t.id==='keydel'){if(!armed(t,'¿Borrar?'))return;try{localStorage.removeItem(AIKEY_LS)}catch(e){}enableApiSample();render();toast('Clave borrada de este dispositivo');return}
+  if(t.id==='keydel'){if(!armed(t,'¿Borrar?'))return;try{localStorage.removeItem(AI_LS);localStorage.removeItem(AIKEY_LS)}catch(e){}AIUI=null;enableApiSample();render();toast('Proveedor desconectado y clave borrada de este dispositivo');return}
   if(ds.aiopen){if(SH.st){SH.st={mode:'ai',meal:SH.st.meal||defaultMeal(),text:'',prev:SH.st};drawSheet()}else openSheet({mode:'ai',meal:S.cur===todayKey()?defaultMeal():'comida',text:''});return}
   if(ds.copyday){const src=dayEntries(shiftKey(S.cur,-1));const d=dayObj(S.cur);src.forEach(e=>{const n={...e,id:uid(),b:e.b.slice(),t:Date.now()};delete n.pk;d.entries.push(n)});saveDay(S.cur);render();toast(`${src.length} alimentos copiados de ayer`);return}
   if(ds.tsave){const tp=templateFromMeal(S.cur,ds.tsave);if(!tp)return;S.templates.unshift(tp);saveTemplates();toast('Guardada. La encontrarás arriba al añadir comida.');return}
