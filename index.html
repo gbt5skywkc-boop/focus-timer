@@ -361,6 +361,20 @@ span.addline{display:block}
 .filebtn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
 .thinking{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.9rem;padding:8px 0}
 .thinking::before{content:"";width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);flex:none}
+/* imágenes de platos */
+.dpic{display:block;position:relative;overflow:hidden;border-radius:8px;background:#E3DCD0;aspect-ratio:16/10;max-width:100%}
+.dpic svg,.dpic img{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover}
+.dpic-tag{position:absolute;right:6px;bottom:5px;font-size:.62rem;font-weight:600;letter-spacing:.04em;color:#5B5244;background:rgba(255,255,255,.72);border-radius:999px;padding:1px 7px}
+.dpic.card{margin:-12px -14px 2px;width:calc(100% + 28px);max-width:none;border-radius:var(--r) var(--r) 0 0}
+.rcard{overflow:hidden}
+.dpic.hero{aspect-ratio:16/9;border-radius:12px}
+.dpic.thumb{width:48px;height:48px;aspect-ratio:1/1;border-radius:8px;grid-row:1/4;align-self:center}
+.dpic.thumb .dpic-tag{display:none}
+.fitem.withimg{grid-template-columns:48px minmax(0,1fr) auto}
+.fitem.withimg .s{grid-column:2/-1}
+.fitem.withimg .c{grid-column:2/-1;text-align:left}
+.aiphoto{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.aiphoto img{width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
 @media (prefers-reduced-motion:no-preference){.thinking::before{animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}}
 .ok-notice{border-left-color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,var(--surface))}
 .airow{display:grid;grid-template-columns:auto minmax(0,1fr) 4.6rem auto;gap:8px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line)}
@@ -958,6 +972,147 @@ const RECIPES=[
  st:["Pocha el puerro picado en el aceite 5 minutos.","Añade la calabaza y la patata en trozos y cubre justo con agua.","Cuece 20 minutos, añade el queso batido y tritura hasta que quede fina. Ajusta de sal."],
  tip:"Para completarla como cena, acompáñala de una tortilla francesa o pollo a la plancha."}
 ];
+RECIPES.push(
+{id:'pollo-curry',n:'Pollo al curry con arroz basmati',m:30,s:2,t:['comida','batch'],ing:[["Pechuga de pollo (cruda)",350],["Arroz basmati (crudo)",150],["Cebolla",120],["Nata para cocinar 18%",100],["Tomate triturado (lata)",150],["Aceite de oliva virgen extra",15]],
+ st:["Cuece el arroz según el paquete.","Pocha la cebolla picada en el aceite 6 minutos y añade el pollo en dados hasta que se dore.","Añade 2 cucharaditas de curry en polvo, el tomate y la nata y cocina 10 minutos a fuego suave.","Sirve el pollo con su salsa sobre el arroz."],
+ tip:"Con leche evaporada o bebida de coco ligera en vez de nata ahorras grasa."},
+{id:'macarrones-bolonesa',n:'Macarrones a la boloñesa',m:30,s:3,t:['comida','batch','prepartido'],ing:[["Pasta (cruda)",270],["Carne picada de ternera 10% grasa",300],["Tomate triturado (lata)",400],["Cebolla",120],["Zanahoria",80],["Aceite de oliva virgen extra",15],["Queso rallado (mezcla)",30]],
+ st:["Sofríe la cebolla y la zanahoria picadas en el aceite 8 minutos.","Añade la carne, desmenúzala y dórala 5 minutos.","Incorpora el tomate, sal y orégano y cocina 15 minutos.","Mezcla con la pasta cocida y sirve con el queso."],
+ tip:"La salsa se congela muy bien: haz el doble y guarda la mitad."},
+{id:'carbonara-ligera',n:'Espaguetis a la carbonara ligera',m:20,s:2,t:['comida','rapida'],ing:[["Pasta (cruda)",180],["Huevo entero",110],["Clara de huevo",66],["Panceta / bacon",60],["Parmesano",30]],
+ st:["Cuece la pasta y guarda medio vaso del agua de cocción.","Dora la panceta en tiras en una sartén sin aceite.","Bate los huevos, las claras y el parmesano con pimienta.","Fuera del fuego, mezcla la pasta con la panceta y el huevo, añadiendo un chorrito del agua hasta que quede cremosa."],
+ tip:"Sin nata, como la receta original: el huevo cuaja con el calor de la pasta."},
+{id:'paella-pollo-verduras',n:'Paella de pollo y verduras',m:45,s:4,t:['comida','batch'],ing:[["Arroz blanco (crudo)",320],["Muslo de pollo sin piel (asado)",400],["Judías verdes",150],["Pimiento rojo",120],["Tomate triturado (lata)",150],["Caldo de pollo (brik)",900],["Aceite de oliva virgen extra",30]],
+ st:["Dora el pollo troceado en el aceite en una paellera y apártalo a un lado.","Añade las judías y el pimiento y rehoga 5 minutos; después el tomate 3 minutos más.","Agrega el arroz, remueve 1 minuto y vierte el caldo caliente con azafrán o colorante.","Cocina 18 minutos sin remover, los primeros 8 a fuego fuerte, y deja reposar 5 minutos tapado."],
+ tip:"Para una paella de domingo antes del partido: mucha energía y poca grasa."},
+{id:'arroz-cubana',n:'Arroz a la cubana',m:20,s:1,t:['comida','rapida','ganar'],ing:[["Arroz blanco (crudo)",100],["Huevo entero",110],["Tomate frito",80],["Plátano",120],["Aceite de oliva virgen extra",10]],
+ st:["Cuece el arroz.","Fríe o haz a la plancha los huevos con el aceite.","Dora el plátano cortado a lo largo en la misma sartén.","Sirve el arroz con el tomate caliente, los huevos y el plátano."],
+ tip:"Barato, rápido y muy energético: buena opción si te cuesta llegar a tus calorías."},
+{id:'albondigas-tomate',n:'Albóndigas en salsa de tomate con arroz',m:40,s:3,t:['comida','batch'],ing:[["Carne picada de ternera 10% grasa",400],["Huevo entero",55],["Pan blanco (barra)",40],["Tomate triturado (lata)",400],["Cebolla",120],["Arroz blanco (crudo)",210],["Aceite de oliva virgen extra",20]],
+ st:["Mezcla la carne con el huevo, el pan remojado en leche o agua y escurrido, ajo picado y sal; forma bolas.","Dóralas en el aceite y resérvalas.","En la misma sartén pocha la cebolla, añade el tomate y cocina 10 minutos.","Devuelve las albóndigas, cuécelas 15 minutos en la salsa y sírvelas con el arroz cocido."],
+ tip:"Aguantan 3 días en la nevera y mejoran de un día para otro."},
+{id:'pechuga-empanada-horno',n:'Pechuga empanada al horno con patatas',m:40,s:2,t:['comida'],ing:[["Pechuga de pollo (cruda)",350],["Huevo entero",55],["Biscotes / pan tostado",40],["Patata (cruda)",500],["Aceite de oliva virgen extra",20]],
+ st:["Precalienta el horno a 210 °C.","Corta las patatas en gajos, alíñalas con la mitad del aceite y sal y hornéalas 15 minutos.","Abre las pechugas en filetes, pásalas por huevo batido y por los biscotes triturados.","Colócalas en la bandeja con las patatas, riégalas con el resto del aceite y hornea 15–18 minutos más."],
+ tip:"Crujiente como frita, pero con mucha menos grasa."},
+{id:'hamburguesa-casera',n:'Hamburguesa casera con patatas al horno',m:35,s:2,t:['comida','ganar'],ing:[["Hamburguesa de ternera (cruda)",240],["Pan de hamburguesa",120],["Queso gouda en lonchas",40],["Lechuga romana",40],["Tomate",80],["Patata (cruda)",400],["Aceite de oliva virgen extra",15]],
+ st:["Hornea las patatas en gajos con el aceite a 210 °C unos 30 minutos.","Haz las hamburguesas a la plancha 3–4 minutos por lado y pon el queso encima al final.","Tuesta el pan y monta con la lechuga y el tomate."],
+ tip:"Hecha en casa tiene la mitad de grasa que la de una cadena de comida rápida."},
+{id:'burrito-ternera',n:'Burrito de ternera y alubias',m:25,s:2,t:['comida','ganar'],ing:[["Tortilla de trigo (wrap)",240],["Carne picada de ternera 10% grasa",250],["Alubias rojas (cocidas)",200],["Arroz blanco (cocido)",150],["Maíz dulce (lata)",80],["Queso rallado (mezcla)",40],["Tomate frito",60]],
+ st:["Dora la carne picada con comino, pimentón y sal.","Añade las alubias escurridas, el maíz y el tomate y calienta 5 minutos.","Reparte el arroz y el relleno en las tortillas, pon el queso y enrolla.","Dóralas en la sartén 1 minuto por lado."],
+ tip:"Envueltos en papel de aluminio aguantan bien para llevar."},
+{id:'fajitas-pollo',n:'Fajitas de pollo',m:20,s:2,t:['comida','rapida'],ing:[["Pechuga de pollo (cruda)",300],["Pimiento rojo",150],["Pimiento verde",100],["Cebolla",120],["Tortilla de trigo (wrap)",240],["Queso fresco batido 0%",100],["Aceite de oliva virgen extra",15]],
+ st:["Corta el pollo, los pimientos y la cebolla en tiras.","Saltéalo todo a fuego fuerte con el aceite, comino, pimentón y sal unos 8 minutos.","Calienta las tortillas y rellénalas con el salteado y una cucharada de queso batido."],
+ tip:"El queso batido sustituye a la nata agria con 10 veces menos grasa."},
+{id:'poke-salmon',n:'Poke bowl de salmón',m:25,s:2,t:['comida'],ing:[["Arroz blanco (crudo)",150],["Salmón (crudo)",200],["Aguacate",100],["Edamame",100],["Mango",100],["Pepino",100],["Salsa de soja",20],["Semillas de sésamo",10]],
+ st:["Cuece el arroz y déjalo templar.","Corta el salmón en dados (si es crudo, que haya estado congelado al menos 5 días) y alíñalo con la soja.","Corta el aguacate, el mango y el pepino.","Monta los cuencos con el arroz de base y el resto por encima con el sésamo."],
+ tip:"Puedes hacer el salmón a la plancha si no te gusta crudo."},
+{id:'bowl-atun',n:'Bowl de arroz, atún y aguacate',m:15,s:1,t:['comida','rapida'],ing:[["Arroz blanco (cocido)",200],["Atún en lata al natural (escurrido)",80],["Aguacate",70],["Maíz dulce (lata)",60],["Tomate cherry",100],["Salsa de soja",10]],
+ st:["Calienta el arroz (vale uno ya cocido).","Ponlo en un cuenco con el atún escurrido, el aguacate en láminas, el maíz y los tomates partidos.","Aliña con la soja."],
+ tip:"Con arroz de vasito para microondas está listo en 5 minutos."},
+{id:'ensalada-cesar',n:'Ensalada César con pollo',m:20,s:2,t:['comida'],ing:[["Lechuga romana",250],["Pechuga de pollo a la plancha",250],["Pan blanco (barra)",60],["Parmesano",30],["Yogur griego natural",80],["Mostaza",10],["Zumo de limón",15],["Aceite de oliva virgen extra",10]],
+ st:["Tuesta el pan en dados con el aceite hasta que esté crujiente.","Mezcla el yogur, la mostaza, el limón, la mitad del parmesano y pimienta para la salsa.","Corta la lechuga, añade el pollo en tiras y los picatostes.","Aliña con la salsa y termina con el resto del parmesano."],
+ tip:"La salsa de yogur tiene un tercio de las calorías de la César clásica."},
+{id:'ensalada-pasta',n:'Ensalada de pasta con atún y huevo',m:20,s:3,t:['comida','batch'],ing:[["Pasta (cruda)",240],["Atún en lata al natural (escurrido)",160],["Huevo entero",110],["Tomate cherry",200],["Maíz dulce (lata)",100],["Aceitunas negras",40],["Aceite de oliva virgen extra",20]],
+ st:["Cuece la pasta, enfríala con agua fría y escúrrela.","Cuece los huevos 10 minutos y pícalos.","Mezcla todo y aliña con el aceite, vinagre y sal."],
+ tip:"Perfecta para llevar en táper al instituto, al trabajo o a un torneo."},
+{id:'ensaladilla-ligera',n:'Ensaladilla rusa ligera',m:30,s:3,t:['comida','batch'],ing:[["Patata (cruda)",500],["Zanahoria",120],["Guisantes",80],["Atún en lata al natural (escurrido)",160],["Huevo entero",110],["Mayonesa",40],["Yogur griego natural",80]],
+ st:["Cuece las patatas y la zanahoria en dados 15 minutos; los guisantes los 5 últimos.","Cuece los huevos 10 minutos.","Mezcla la mayonesa con el yogur.","Junta todo con el atún y el huevo picado y enfría en la nevera."],
+ tip:"Cortar la mayonesa con yogur reduce la grasa a la mitad sin perder sabor."},
+{id:'salmorejo-huevo',n:'Salmorejo con huevo y jamón',m:15,s:3,t:['comida','batch'],ing:[["Tomate",1000],["Pan blanco (barra)",150],["Aceite de oliva virgen extra",50],["Ajo",5],["Huevo entero",110],["Jamón serrano",45]],
+ st:["Tritura los tomates con el ajo y sal y cuélalos.","Añade el pan troceado, deja 10 minutos y tritura de nuevo añadiendo el aceite poco a poco.","Enfría en la nevera y sirve con el huevo cocido picado y el jamón en virutas."],
+ tip:"Muy rico en vitamina C y potasio: ideal en verano o después de entrenar con calor."},
+{id:'crema-calabacin',n:'Crema de calabacín',m:25,s:3,t:['comida','batch'],ing:[["Calabacín",700],["Puerro",150],["Patata (cruda)",150],["Queso fresco batido 0%",100],["Aceite de oliva virgen extra",15]],
+ st:["Pocha el puerro en el aceite 5 minutos.","Añade el calabacín y la patata troceados y cubre justo con agua.","Cuece 15 minutos, añade el queso batido y tritura."],
+ tip:"Como primer plato llena mucho con muy pocas calorías."},
+{id:'lentejas-chorizo',n:'Lentejas con chorizo',m:50,s:4,t:['comida','batch','ganar'],ing:[["Lentejas (crudas)",320],["Chorizo",100],["Patata (cruda)",300],["Zanahoria",120],["Cebolla",120],["Pimiento verde",80],["Aceite de oliva virgen extra",20]],
+ st:["Sofríe la cebolla, el pimiento y la zanahoria picados en el aceite.","Añade el chorizo en rodajas y rehoga 2 minutos.","Incorpora las lentejas lavadas, la patata en trozos y 1,3 litros de agua.","Cuece 40 minutos a fuego medio hasta que estén tiernas."],
+ tip:"Mucho hierro: acompaña de una naranja de postre para absorberlo mejor."},
+{id:'alubias-verduras',n:'Alubias blancas con verduras',m:30,s:3,t:['comida','batch'],ing:[["Alubias blancas (cocidas)",600],["Calabacín",200],["Pimiento rojo",120],["Cebolla",120],["Tomate triturado (lata)",200],["Aceite de oliva virgen extra",20]],
+ st:["Pica la verdura y sofríela en el aceite 10 minutos.","Añade el tomate y cocina 5 minutos.","Incorpora las alubias escurridas con un vaso de agua y cuece 10 minutos."],
+ tip:"Con alubias de bote está en media hora."},
+{id:'bacalao-tomate',n:'Bacalao con tomate',m:30,s:2,t:['comida'],ing:[["Bacalao desalado",350],["Tomate triturado (lata)",400],["Cebolla",150],["Pimiento verde",100],["Harina de trigo",10],["Aceite de oliva virgen extra",25],["Patata cocida",300]],
+ st:["Pasa el bacalao por la harina y dóralo 2 minutos por lado en el aceite; resérvalo.","En la misma sartén pocha la cebolla y el pimiento 10 minutos.","Añade el tomate y cocina 10 minutos.","Mete el bacalao en la salsa 5 minutos y sirve con la patata cocida."],
+ tip:"Un clásico de casa con mucha proteína y muy poca grasa."},
+{id:'dorada-horno',n:'Dorada al horno con patatas',m:45,s:2,t:['comida'],ing:[["Dorada / lubina",500],["Patata (cruda)",500],["Cebolla",150],["Vino blanco",60],["Aceite de oliva virgen extra",25],["Zumo de limón",15]],
+ st:["Precalienta el horno a 200 °C.","Hornea las patatas en rodajas con la cebolla, la mitad del aceite y sal 25 minutos.","Coloca encima el pescado, riégalo con el vino, el limón y el resto del aceite.","Hornea 15–18 minutos más."],
+ tip:"Pide en la pescadería que te lo limpien y lo abran en libro."},
+{id:'atun-encebollado',n:'Atún encebollado',m:30,s:2,t:['comida'],ing:[["Atún fresco",350],["Cebolla",400],["Vino blanco",60],["Aceite de oliva virgen extra",25],["Pan blanco (barra)",80]],
+ st:["Pocha la cebolla en juliana en el aceite a fuego bajo 15 minutos.","Sube el fuego, añade el atún en tacos y dóralo 2 minutos.","Añade el vino, tapa y cocina 5 minutos. Sirve con pan."],
+ tip:"No lo cocines de más: el atún se seca enseguida."},
+{id:'sepia-patatas',n:'Sepia a la plancha con patatas',m:25,s:2,t:['comida'],ing:[["Sepia",400],["Patata (cruda)",400],["Ajo",10],["Aceite de oliva virgen extra",20],["Zumo de limón",15]],
+ st:["Cuece las patatas en rodajas 12 minutos y escúrrelas.","Haz la sepia en tiras a la plancha muy caliente 3–4 minutos.","Saltea al final las patatas con el ajo picado y el aceite y sirve con limón."],
+ tip:"La sepia tiene muchísimo hierro y casi nada de grasa."},
+{id:'gambas-ajillo',n:'Gambas al ajillo con pan',m:10,s:2,t:['comida','rapida'],ing:[["Gambas / langostinos",300],["Ajo",20],["Aceite de oliva virgen extra",30],["Pan blanco (barra)",120]],
+ st:["Calienta el aceite en una cazuela de barro con los ajos laminados y una guindilla si te gusta.","Cuando los ajos empiecen a dorarse, añade las gambas peladas y sal.","Cocina 2 minutos y sirve muy caliente con el pan."],
+ tip:"Mojar pan en el aceite suma muchas calorías: útil si quieres ganar peso."},
+{id:'mejillones-vapor',n:'Mejillones al vapor con limón',m:15,s:2,t:['comida','rapida','snack'],ing:[["Mejillones",400],["Vino blanco",80],["Zumo de limón",20],["Pan integral",80]],
+ st:["Limpia los mejillones quitando las barbas.","Ponlos en una olla con el vino y una hoja de laurel, tapa a fuego fuerte.","En 3–4 minutos se abren: retíralos y sírvelos con limón y el pan."],
+ tip:"Una de las mejores fuentes de hierro y vitamina B12."},
+{id:'lomo-pimientos',n:'Lomo de cerdo con pimientos',m:25,s:2,t:['comida'],ing:[["Lomo de cerdo (crudo)",350],["Pimiento rojo",150],["Pimiento verde",150],["Cebolla",100],["Patata (cruda)",350],["Aceite de oliva virgen extra",20]],
+ st:["Asa los pimientos y la cebolla en tiras a fuego medio con la mitad del aceite 15 minutos.","Cuece o haz al microondas las patatas en rodajas.","Haz el lomo en filetes a la plancha 2 minutos por lado y sirve con los pimientos y las patatas."],
+ tip:"El lomo de cerdo es tan magro como el pollo."},
+{id:'solomillo-boniato',n:'Solomillo de cerdo con boniato',m:35,s:2,t:['comida'],ing:[["Solomillo de cerdo (crudo)",400],["Boniato (crudo)",500],["Champiñones",200],["Aceite de oliva virgen extra",20],["Vino blanco",50]],
+ st:["Hornea el boniato en dados con la mitad del aceite a 200 °C 25 minutos.","Dora el solomillo entero por todos los lados y termínalo en el horno 12 minutos.","Saltea los champiñones con el vino y sirve el solomillo en medallones."],
+ tip:"Déjalo reposar 5 minutos antes de cortarlo para que quede jugoso."},
+{id:'conejo-ajillo',n:'Conejo al ajillo',m:40,s:3,t:['comida'],ing:[["Conejo (crudo)",700],["Ajo",25],["Vino blanco",100],["Aceite de oliva virgen extra",30],["Patata cocida",450]],
+ st:["Salpimienta el conejo troceado y dóralo bien en el aceite.","Añade los ajos enteros machacados y el tomillo y dora 2 minutos.","Vierte el vino, tapa y cocina 25 minutos a fuego bajo. Sirve con patata cocida."],
+ tip:"El conejo es una carne muy magra y rica en vitamina B12."},
+{id:'ternera-guisada',n:'Ternera guisada con patatas',m:90,s:4,t:['comida','batch','ganar'],ing:[["Ternera para guisar (cruda)",600],["Patata (cruda)",600],["Zanahoria",200],["Cebolla",150],["Tomate triturado (lata)",150],["Vino tinto",150],["Aceite de oliva virgen extra",30]],
+ st:["Dora la carne en tacos en el aceite y resérvala.","Sofríe la cebolla y la zanahoria, añade el tomate y el vino y deja reducir.","Devuelve la carne, cubre con agua y cuece 60 minutos (20 en olla exprés).","Añade las patatas chascadas y cuece 20 minutos más."],
+ tip:"En olla exprés lo tienes en 40 minutos y te salen 4 comidas."},
+{id:'pollo-asado-verduras',n:'Pollo asado con verduras',m:60,s:4,t:['comida','batch'],ing:[["Muslo de pollo con piel (crudo)",900],["Patata (cruda)",500],["Cebolla",200],["Pimiento rojo",200],["Calabacín",300],["Aceite de oliva virgen extra",30]],
+ st:["Precalienta el horno a 200 °C.","Pon en una bandeja las verduras troceadas con la mitad del aceite y sal.","Coloca encima el pollo salpimentado y riega con el resto del aceite.","Hornea 50 minutos, dándole la vuelta a mitad."],
+ tip:"Quitar la piel al comerlo ahorra casi la mitad de la grasa."},
+{id:'huevos-rotos',n:'Huevos rotos con jamón',m:25,s:2,t:['comida','ganar'],ing:[["Patata (cruda)",500],["Huevo entero",220],["Jamón serrano",60],["Aceite de oliva virgen extra",25]],
+ st:["Corta las patatas en rodajas finas, alíñalas con el aceite y sal y hazlas al microondas 10 minutos tapadas o al horno 25 minutos.","Dóralas en la sartén 3 minutos.","Fríe o haz a la plancha los huevos, ponlos encima con el jamón y rómpelos al servir."],
+ tip:"Con patatas al horno en vez de fritas tiene la mitad de calorías."},
+{id:'tortilla-espinacas',n:'Tortilla francesa de espinacas y queso',m:10,s:1,t:['desayuno','comida','rapida'],ing:[["Huevo entero",165],["Espinacas",80],["Queso de cabra (rulo)",30],["Aceite de oliva virgen extra",5],["Pan integral",50]],
+ st:["Saltea las espinacas 1 minuto con unas gotas de aceite.","Añade los huevos batidos y, cuando empiecen a cuajar, el queso desmenuzado.","Dobla la tortilla y sirve con el pan."],
+ tip:"Cena rápida con unos 30 g de proteína."},
+{id:'shakshuka',n:'Shakshuka (huevos en salsa de tomate)',m:25,s:2,t:['comida','desayuno'],ing:[["Tomate triturado (lata)",400],["Pimiento rojo",150],["Cebolla",120],["Huevo entero",220],["Queso feta",50],["Pan de pita",120],["Aceite de oliva virgen extra",15]],
+ st:["Sofríe la cebolla y el pimiento en el aceite 8 minutos con comino y pimentón.","Añade el tomate y cocina 10 minutos hasta que espese.","Haz 4 huecos, casca los huevos y tapa 5–6 minutos.","Termina con el feta desmenuzado y sirve con pan de pita."],
+ tip:"Vegetariana, muy rica en vitamina C y fácil de compartir."},
+{id:'tortitas-avena',n:'Tortitas de avena y plátano',m:15,s:1,t:['desayuno','rapida','post'],ing:[["Copos de avena",60],["Plátano",120],["Huevo entero",110],["Leche semidesnatada",50],["Miel",15],["Fresas",100]],
+ st:["Tritura la avena, el plátano, los huevos y la leche hasta tener una masa.","Haz tortitas en una sartén antiadherente a fuego medio, 1–2 minutos por cada lado.","Sirve con las fresas y la miel."],
+ tip:"Sin harina ni azúcar añadido en la masa: el plátano endulza."},
+{id:'tostada-salmon',n:'Tostada de salmón ahumado y queso crema',m:5,s:1,t:['desayuno','rapida'],ing:[["Pan de centeno",80],["Queso crema untable",30],["Salmón ahumado",60],["Aguacate",40]],
+ st:["Tuesta el pan.","Unta el queso crema, pon el aguacate en láminas y el salmón por encima.","Termina con pimienta y unas gotas de limón."],
+ tip:"Salmón ahumado: buena fuente de vitamina D, pero con mucha sal."},
+{id:'yogur-nueces',n:'Yogur griego con nueces y miel',m:2,s:1,t:['snack','postre','rapida'],ing:[["Yogur griego natural",125],["Nueces",20],["Miel",10],["Arándanos",60]],
+ st:["Pon el yogur en un cuenco.","Añade las nueces troceadas, los arándanos y la miel."],
+ tip:"Las nueces aportan omega-3 de origen vegetal."},
+{id:'bocadillo-lomo',n:'Bocadillo de lomo con pimientos',m:15,s:1,t:['comida','ganar','post'],ing:[["Pan blanco (barra)",120],["Lomo de cerdo (crudo)",120],["Pimiento verde",80],["Aceite de oliva virgen extra",10]],
+ st:["Haz los pimientos en tiras a la plancha con la mitad del aceite.","Haz el lomo en filetes finos 1 minuto por lado.","Monta el bocadillo con el pan abierto."],
+ tip:"El clásico bocata de bar, con unos 40 g de proteína."},
+{id:'sandwich-pollo',n:'Sándwich de pollo y aguacate',m:10,s:1,t:['comida','snack','rapida'],ing:[["Pan de molde",75],["Pechuga de pollo a la plancha",100],["Aguacate",50],["Lechuga romana",30],["Tomate",60],["Queso fresco batido 0%",30]],
+ st:["Tuesta el pan.","Unta el queso batido y el aguacate chafado.","Añade la lechuga, el tomate y el pollo en láminas y cierra."],
+ tip:"Puedes usar el pollo que te sobre de otro día."},
+{id:'pizza-pita',n:'Pizza rápida en pan de pita',m:15,s:1,t:['comida','rapida'],ing:[["Pan de pita",120],["Tomate frito",60],["Mozzarella fresca",80],["Fiambre de pechuga de pavo",50],["Champiñones",60],["Pimiento rojo",40]],
+ st:["Precalienta el horno a 220 °C (o usa la freidora de aire).","Unta los panes con el tomate y reparte el pavo, los champiñones, el pimiento y la mozzarella.","Hornea 8–10 minutos hasta que el queso se funda."],
+ tip:"Tiene la mitad de calorías que una porción equivalente de pizza a domicilio."},
+{id:'quesadilla-pollo',n:'Quesadilla de pollo y queso',m:10,s:1,t:['comida','snack','rapida','post'],ing:[["Tortilla de trigo (wrap)",120],["Pechuga de pollo a la plancha",100],["Queso rallado (mezcla)",40],["Pimiento rojo",50],["Maíz dulce (lata)",40]],
+ st:["Reparte en una tortilla el queso, el pollo desmenuzado, el pimiento picado y el maíz.","Tapa con la otra tortilla.","Dórala en la sartén 2 minutos por lado y corta en triángulos."],
+ tip:"Buena opción para después de entrenar: proteína e hidratos en 10 minutos."},
+{id:'curry-garbanzos',n:'Curry de garbanzos y espinacas',m:25,s:3,t:['comida','batch'],ing:[["Garbanzos de bote (escurridos)",500],["Espinacas",200],["Tomate triturado (lata)",300],["Cebolla",120],["Bebida de soja sin azúcar (con calcio)",200],["Arroz basmati (crudo)",180],["Aceite de oliva virgen extra",15]],
+ st:["Cuece el arroz.","Pocha la cebolla en el aceite, añade 2 cucharaditas de curry y el tomate y cocina 5 minutos.","Incorpora los garbanzos y la bebida de soja y cocina 10 minutos.","Añade las espinacas al final hasta que se reduzcan y sirve con el arroz."],
+ tip:"Vegano y con unos 20 g de proteína por ración."},
+{id:'mousse-cacao-proteica',n:'Mousse de cacao proteica',m:5,s:2,t:['postre','snack','rapida'],ing:[["Queso fresco batido 0%",300],["Cacao puro en polvo",15],["Proteína whey (polvo)",30],["Miel",20]],
+ st:["Mezcla todos los ingredientes con unas varillas hasta que no queden grumos.","Reparte en dos vasitos y enfría 30 minutos."],
+ tip:"Postre con más de 25 g de proteína por vasito."},
+{id:'batido-frutos-rojos',n:'Batido de frutos rojos y skyr',m:5,s:1,t:['desayuno','snack','post','rapida'],ing:[["Skyr natural",150],["Leche semidesnatada",200],["Fresas",100],["Frambuesas",50],["Plátano",80]],
+ st:["Pon todo en la batidora y tritura 30 segundos.","Si usas fruta congelada queda como un granizado."],
+ tip:"Unos 25 g de proteína y mucha vitamina C."},
+{id:'porridge-cacahuete',n:'Porridge de avena con plátano y cacahuete',m:10,s:1,t:['desayuno','ganar','prepartido'],ing:[["Copos de avena",80],["Leche entera",250],["Plátano",120],["Crema de cacahuete 100%",20],["Miel",10]],
+ st:["Cuece la avena con la leche a fuego medio 5 minutos, removiendo, hasta que espese.","Sírvela con el plátano en rodajas, la crema de cacahuete y la miel."],
+ tip:"Desayuno de más de 800 kcal: ideal en días de partido o si quieres ganar peso."},
+{id:'tacos-pescado',n:'Tacos de merluza con guacamole',m:20,s:2,t:['comida'],ing:[["Merluza",300],["Tortilla de maíz (taco)",180],["Guacamole",80],["Lombarda",100],["Zumo de limón",15],["Aceite de oliva virgen extra",10]],
+ st:["Corta la lombarda muy fina y alíñala con el limón y sal.","Haz la merluza a la plancha con el aceite, comino y pimentón y desmígala.","Calienta las tortillas y rellénalas con el pescado, la lombarda y el guacamole."],
+ tip:"Pescado blanco con muy poca grasa y mucho sabor."},
+{id:'arroz-tres-delicias',n:'Arroz tres delicias casero',m:20,s:2,t:['comida','rapida'],ing:[["Arroz blanco (cocido)",400],["Huevo entero",110],["Jamón cocido extra",80],["Guisantes",80],["Zanahoria",80],["Gambas / langostinos",120],["Aceite de oliva virgen extra",15],["Salsa de soja",15]],
+ st:["Haz una tortilla con los huevos, córtala en tiras y resérvala.","Saltea la zanahoria en dados y los guisantes con el aceite 4 minutos; añade las gambas y el jamón.","Incorpora el arroz frío, la tortilla y la soja y saltea a fuego fuerte 3 minutos."],
+ tip:"Sale mejor con arroz cocido del día anterior."}
+);
+
 function recipeFood(r){
   const tot=NK.map(()=>0);let w=0;
   r.ing.forEach(([n,g])=>{const f=BASE.find(x=>x.n===n);if(!f)return;w+=g;f.v.forEach((x,i)=>tot[i]+=x*g/100)});
@@ -969,7 +1124,7 @@ function todayKey(d=new Date()){const z=n=>String(n).padStart(2,'0');return d.ge
 function parseKey(k){const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d)}
 function shiftKey(k,n){const d=parseKey(k);d.setDate(d.getDate()+n);return todayKey(d)}
 function daysBetween(a,b){return Math.round((parseKey(b)-parseKey(a))/864e5)}
-const S={days:{},weights:{},foods:[],favs:[],goals:{...DEFAULT_GOALS},profile:{...DEF_PROFILE},plan:null,plans:{},templates:[],rq:'',rtag:'',rsort:'def',pday:0,dtype:'',dstart:'',view:'hoy',cur:todayKey(),month:todayKey().slice(0,7),q:'',cat:'',sort:'cat',mnut:'k',wrange:'90',mode:'init',ready:false};
+const S={days:{},weights:{},foods:[],favs:[],goals:{...DEFAULT_GOALS},profile:{...DEF_PROFILE},plan:null,plans:{},templates:[],photos:{},rq:'',rtag:'',rsort:'def',pday:0,dtype:'',dstart:'',view:'hoy',cur:todayKey(),month:todayKey().slice(0,7),q:'',cat:'',sort:'cat',mnut:'k',wrange:'90',mode:'init',ready:false};
 let DB=null;
 function allFoods(){return S.foods.concat(REC_FOODS,BASE)}
 function findFood(id){return allFoods().find(f=>f.id===id)}
@@ -1021,7 +1176,7 @@ function statusOf(k,v,G){const g=G[k]||0;if(!g)return 'ok';const r=v/g;if(META[k
 /* ---------- Almacenamiento ---------- */
 const LS='diario-macros-v2';
 function normDays(o){const r={};Object.keys(o||{}).forEach(k=>{const v=o[k];if(v)r[k]={entries:Array.isArray(v.entries)?v.entries.map(e=>({...e,b:[...e.b]})):[],water:+v.water||0,type:v.type||'',energy:+v.energy||0,sleep:+v.sleep||0,note:v.note||''}});return r}
-function loadLocal(){try{const j=JSON.parse(localStorage.getItem(LS)||localStorage.getItem('diario-macros-v1')||'null');if(j){S.days=normDays(j.days);S.foods=j.foods||[];S.goals={...DEFAULT_GOALS,...(j.goals||{})};S.weights=j.weights||{};S.favs=j.favs||[];S.profile={...DEF_PROFILE,...(j.profile||{})};S.profileSet=!!j.profile;S.plan=j.plan||null;S.plans=j.plans||{};S.templates=j.templates||[]}}catch(e){}}
+function loadLocal(){loadPhotosLocal();try{const j=JSON.parse(localStorage.getItem(LS)||localStorage.getItem('diario-macros-v1')||'null');if(j){S.days=normDays(j.days);S.foods=j.foods||[];S.goals={...DEFAULT_GOALS,...(j.goals||{})};S.weights=j.weights||{};S.favs=j.favs||[];S.profile={...DEF_PROFILE,...(j.profile||{})};S.profileSet=!!j.profile;S.plan=j.plan||null;S.plans=j.plans||{};S.templates=j.templates||[]}}catch(e){}}
 function saveLocal(){try{localStorage.setItem(LS,JSON.stringify({days:S.days,foods:S.foods,goals:S.goals,weights:S.weights,favs:S.favs,profile:S.profile,plan:S.plan,plans:S.plans,templates:S.templates}))}catch(e){}}
 const WQ={};
 function queueWrite(path,data){
@@ -1075,7 +1230,7 @@ async function initStore(){
   /* el propietario usa la raíz; cualquier otra persona, su propio espacio privado */
   PFX=owner?'':'data/users/'+id+'/app/';
   DB=db;S.mode='db';setStatus();
-  const got={days:0,weights:0,foods:0,goals:0,profile:0,favs:0,plan:0,plans:0,templates:0};
+  const got={days:0,weights:0,foods:0,goals:0,profile:0,favs:0,plan:0,plans:0,templates:0,photos:0};
   const soft=()=>{if(Object.values(got).some(v=>!v))return;S.ready=true;
     const ae=document.activeElement;
     if(ae&&V.contains(ae)&&(ae.tagName==='INPUT'||ae.tagName==='SELECT'||ae.tagName==='TEXTAREA')){if(S.view==='alimentos'&&document.getElementById('flist'))document.getElementById('flist').innerHTML=foodListHTML();return}
@@ -1088,6 +1243,7 @@ async function initStore(){
   UNSUB.push(db.doc(dp('config/profile')).onSnapshot(s=>{const v=s.exists?s.data():null;S.profileSet=!!v;S.profile={...DEF_PROFILE,...(v&&v.profile||{})};if(!Array.isArray(S.profile.week)||S.profile.week.length!==7)S.profile.week=[...DEF_PROFILE.week];got.profile=1;soft()},err));
   UNSUB.push(db.doc(dp('config/favs')).onSnapshot(s=>{const v=s.exists?s.data():null;S.favs=v&&Array.isArray(v.ids)?[...v.ids]:[];got.favs=1;soft()},err));
   UNSUB.push(db.doc(dp('config/plan')).onSnapshot(s=>{const v=s.exists?s.data():null;S.plan=v&&v.plan&&Array.isArray(v.plan.days)?clonePlan(v.plan):null;got.plan=1;soft()},err));
+  UNSUB.push(db.collection(dp('photos')).onSnapshot(snap=>{const o={};snap.docs.forEach(d=>{const v=d.data();if(v&&typeof v.img==='string'&&v.img.startsWith('data:image/'))o[d.id]=v.img});S.photos=o;got.photos=1;soft()},err));
   UNSUB.push(db.doc(dp('config/templates')).onSnapshot(s=>{const v=s.exists?s.data():null;S.templates=v&&Array.isArray(v.items)?v.items.map(t=>({...t,items:t.items.map(i=>({...i,b:[...i.b]}))})):[];got.templates=1;soft()},err));
   UNSUB.push(db.collection(dp('plans')).onSnapshot(snap=>{const o={};snap.docs.forEach(d=>{const v=d.data();if(v&&v.plan&&Array.isArray(v.plan.days))o[d.id]=clonePlan(v.plan)});S.plans=o;got.plans=1;soft()},err));
 }
@@ -1276,7 +1432,7 @@ function viewWeight(){
 
 /* ----- Alimentos ----- */
 function isFav(id){return S.favs.includes(id)}
-function foodRow(f,attr,extra){const v=f.v;return `<button class="fitem" ${attr}="${esc(f.id)}"><span class="n">${esc(f.n)}${f.rec?'<em>Receta</em>':f.own?(f.ing?'<em>Plato</em>':'<em>Tuyo</em>'):''}${isFav(f.id)?'<span class="star" aria-label="favorito">★</span>':''}</span><span class="k">${extra?extra.r:fmt(v[0])+' kcal'}</span><span class="s">${extra&&extra.s?extra.s:`<span class="mp">P ${fmt(v[1],1)}</span> · <span class="mc">HC ${fmt(v[2],1)}</span> · <span class="mf">G ${fmt(v[3],1)}</span> · por 100 g`}</span><span class="c">${esc(CATS[f.cat]||'')}</span></button>`}
+function foodRow(f,attr,extra){const v=f.v,pic=f.rec||f.ing;return `<button class="fitem${pic?' withimg':''}" ${attr}="${esc(f.id)}">${pic?dishPic(f,'thumb'):''}<span class="n">${esc(f.n)}${f.rec?'<em>Receta</em>':f.own?(f.ing?'<em>Plato</em>':'<em>Tuyo</em>'):''}${isFav(f.id)?'<span class="star" aria-label="favorito">★</span>':''}</span><span class="k">${extra?extra.r:fmt(v[0])+' kcal'}</span><span class="s">${extra&&extra.s?extra.s:`<span class="mp">P ${fmt(v[1],1)}</span> · <span class="mc">HC ${fmt(v[2],1)}</span> · <span class="mf">G ${fmt(v[3],1)}</span> · por 100 g`}</span><span class="c">${esc(CATS[f.cat]||'')}</span></button>`}
 function filterFoods(q,cat){const toks=norm(q).split(/\s+/).filter(Boolean);return allFoods().filter(f=>(cat==='fav'?isFav(f.id):cat==='mine'?f.own:(!cat||f.cat===cat))&&toks.every(t=>norm(f.n).includes(t)))}
 const SORTS=[['cat','Por categoría'],['p','Más proteína'],['pd','Proteína por kcal'],['kd','Más calorías'],['ka','Menos calorías'],['fi','Más fibra'],['az','A–Z']];
 function sortFoods(l,s){const c=l.slice();const by=fn=>c.sort((a,b)=>fn(b)-fn(a));
@@ -1565,13 +1721,13 @@ function viewRecipes(){
   <div id="rlist">${recipeListHTML()}</div></div>`;
 }
 function recipeCards(l){if(!l.length)return `<div class="emptybox"><b>Ninguna receta coincide</b>Prueba con otro ingrediente o quita el filtro.</div>`;
-  return `<div class="rgrid">${l.map(r=>{const f=recFood(r),x=k=>f.v[k]*f.pg/100;return `<button class="rcard" data-rec="${r.id}"><span class="rtop"><b>${esc(r.n)}</b><span class="hint">${r.m} min · ${r.s} ${r.s===1?'ración':'raciones'}</span></span>
+  return `<div class="rgrid">${l.map(r=>{const f=recFood(r),x=k=>f.v[k]*f.pg/100;return `<button class="rcard" data-rec="${r.id}">${dishPic(f,'card')}<span class="rtop"><b>${esc(r.n)}</b><span class="hint">${r.m} min · ${r.s} ${r.s===1?'ración':'raciones'}</span></span>
     <span class="rmac num"><span>${fmt(x(0))} kcal</span><span class="mp">P ${fmt(x(1))}</span><span class="mc">HC ${fmt(x(2))}</span><span class="mf">G ${fmt(x(3))}</span></span>
     <span class="rtags">${recIsProt(r)?'<span class="chip ok">Alta en proteína</span>':''}${recIsVeg(r)?'<span class="chip">Vegetariana</span>':''}${r.t.filter(t=>['ganar','prepartido','post','rapida'].includes(t)).map(t=>`<span class="chip">${RTAGS[t]}</span>`).join('')}</span></button>`}).join('')}</div>`}
 function drawRView(){
   const st=SH.st,r=findRecipe(st.id),f=recFood(r),sc=st.serv/r.s;SH.title.textContent=r.n;
   const per=k=>f.v[NK.indexOf(k)]*f.pg/100,G=goalsFor(S.cur);
-  SH.body.innerHTML=`<div class="listhead"><span class="hint">${r.m} minutos · ${fmt(f.pg)} g por ración (en crudo)</span><div class="stepper" role="group" aria-label="Raciones"><button class="iconbtn" data-rserv="-1" aria-label="Menos raciones">−</button><b class="num">${st.serv} ${st.serv===1?'ración':'raciones'}</b><button class="iconbtn" data-rserv="1" aria-label="Más raciones">+</button></div></div>
+  SH.body.innerHTML=`${dishPic(f,'hero')}${photoControls('r-'+r.id)}<div class="listhead"><span class="hint">${r.m} minutos · ${fmt(f.pg)} g por ración (en crudo)</span><div class="stepper" role="group" aria-label="Raciones"><button class="iconbtn" data-rserv="-1" aria-label="Menos raciones">−</button><b class="num">${st.serv} ${st.serv===1?'ración':'raciones'}</b><button class="iconbtn" data-rserv="1" aria-label="Más raciones">+</button></div></div>
   <div><span class="eyebrow">Por ración</span><div class="preview" style="margin-top:6px"><div><b>${fmt(per('k'))}</b><span>kcal · ${fmt(per('k')/G.k*100)}%</span></div><div><b class="mp">${fmt(per('p'),1)}</b><span>proteína g</span></div><div><b class="mc">${fmt(per('c'),1)}</b><span>hidratos g</span></div><div><b class="mf">${fmt(per('f'),1)}</b><span>grasa g</span></div></div>
   <div class="chips" style="margin-top:8px">${['fi','fe','ca','vc','vd','kk'].map(k=>`<span class="chip ${statusOf(k,per(k)*3,G)==='ok'&&META[k].t!=='max'?'ok':''}">${META[k].l} ${fmt(G[k]?per(k)/G[k]*100:0)}%</span>`).join('')}</div></div>
   <div><span class="eyebrow">Ingredientes para ${st.serv} ${st.serv===1?'ración':'raciones'}</span><div class="ntable" style="margin-top:6px">${r.ing.map(([n,g])=>{const gg=g*sc,h=unitHint({fid:'b-'+slug(n),g:gg});return `<div>${esc(n)}${h?` <span class="muted">(${esc(h)})</span>`:''}</div><div>${fmt(gg)} g</div>`}).join('')}</div></div>
@@ -1602,8 +1758,9 @@ function sampleMsg(e){const c=e&&e.code;
 function mdLite(t){let h='',inList=false;t.split(/\n+/).map(l=>l.trim()).filter(Boolean).forEach(l=>{const li=/^[-•*]\s/.test(l);const b=esc(li?l.replace(/^[-•*]\s+/,''):l).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');if(li&&!inList){h+='<ul>';inList=true}if(!li&&inList){h+='</ul>';inList=false}h+=li?`<li>${b}</li>`:`<p>${b}</p>`});if(inList)h+='</ul>';return h}
 
 function drawAI(){
-  const st=SH.st;SH.title.textContent='Escribe lo que has comido';
-  SH.body.innerHTML=`<p class="hint" style="margin:0">Escríbelo como se lo contarías a alguien. Claude lo convierte en alimentos con sus gramos y tú lo revisas antes de guardarlo.</p>
+  const st=SH.st;SH.title.textContent=SAMPLE_IMG?'Escribe o fotografía tu comida':'Escribe lo que has comido';
+  SH.body.innerHTML=`<p class="hint" style="margin:0">Escríbelo como se lo contarías a alguien${SAMPLE_IMG?' o hazle una foto al plato':''}. Claude lo convierte en alimentos con sus gramos y tú lo revisas antes de guardarlo.</p>
+  ${SAMPLE_IMG?`<div class="aiphoto">${st.photoUrl?`<img src="${st.photoUrl}" alt="Foto de tu comida">`:''}<label class="pillbtn filebtn">${st.photoUrl?'Cambiar la foto':'Foto del plato'}<input type="file" id="aiphoto" accept="${esc((SAMPLE_IMG.mediaTypes||['image/jpeg','image/png']).join(','))}" hidden></label>${st.photoUrl?'<span class="hint">Añade abajo lo que no se vea (p. ej. «con aceite», «200 g de arroz»).</span>':''}</div>`:''}
   <textarea id="aitext" class="ta" rows="4" placeholder="Ej.: dos tostadas de pan integral con aceite y un café con leche. A mediodía 200 g de pollo con arroz y una manzana.">${esc(st.text||'')}</textarea>
   <div><span class="eyebrow">Si no lo indicas, se apunta en</span><div class="chips" role="group" aria-label="Comida" style="margin-top:6px">${MEALS.map(([id,l])=>`<button class="cat" data-aimeal="${id}" aria-pressed="${st.meal===id}">${l}</button>`).join('')}</div></div>
   <div id="aiout"></div>`;
@@ -1621,7 +1778,7 @@ function drawAIOut(){const st=SH.st,el=document.getElementById('aiout');if(!el)r
   el.innerHTML=`<span class="eyebrow">Revisa y ajusta · ${fmt(tot.k)} kcal · P ${fmt(tot.p)} g</span><div class="flist" style="margin-top:6px">${st.res.map((x,i)=>`<div class="airow ${x.on?'':'off'}"><input type="checkbox" data-aion="${i}" ${x.on?'checked':''} aria-label="Incluir ${esc(x.f.n)}"><span class="n">${esc(x.f.n)}${x.f.est?' <em class="est">estimado</em>':''}<small>${fmt(x.f.v[0]*x.g/100)} kcal · P ${fmt(x.f.v[1]*x.g/100,1)} g</small></span><input type="number" inputmode="decimal" min="1" step="any" data-aig="${i}" value="${x.g}" aria-label="Gramos"><select data-aim="${i}" aria-label="Comida">${MEALS.map(([id,l])=>`<option value="${id}" ${x.meal===id?'selected':''}>${l}</option>`).join('')}</select></div>`).join('')}</div>
   ${st.res.some(x=>x.f.est)?'<p class="hint" style="margin:6px 0 0">Los alimentos marcados como estimados no estaban en la base: sus valores son una aproximación de Claude.</p>':''}`}
 async function runAI(){
-  const st=SH.st,text=(st.text||'').trim();if(text.length<3){toast('Escribe primero qué has comido.');return}
+  const st=SH.st,text=(st.text||'').trim();if(text.length<3&&!st.photo){toast('Escribe primero qué has comido o haz una foto.');return}
   if(!SAMPLE){toast('Claude no está disponible en esta página.');return}
   const foods=allFoods();st.foods=foods;st.busy=true;st.res=null;st.err='';const ctl=new AbortController();st.ctl=ctl;drawAI();
   const list=foods.map((f,i)=>`${i}|${f.n}|${f.pl}=${Math.round(f.pg)} g`).join('\n');
@@ -1639,10 +1796,10 @@ Reglas:
 
 Responde solo con JSON, así: {"items":[{"i":12,"g":150,"meal":"comida"}],"nuevos":[{"name":"Salsa de yogur","g":30,"meal":"cena","k":120,"p":3,"c":5,"f":10,"fi":0,"su":4,"sf":2,"na":300}]}
 
-Descripción del usuario:
+${st.photo?'Además tienes una FOTO de la comida: identifica cada alimento que se ve y estima sus gramos por el tamaño del plato, los cubiertos y el grosor de las raciones. Si la foto y el texto no coinciden, manda el texto.\n\n':''}Descripción del usuario${st.photo?' (puede estar vacía)':''}:
 """${text.slice(0,2000)}"""`;
   try{
-    const r=await SAMPLE.json(prompt,{modelTier:'quick',signal:ctl.signal});
+    const r=await SAMPLE.json(prompt,st.photo?{signal:ctl.signal,images:st.photo}:{modelTier:'quick',signal:ctl.signal});
     if(SH.st!==st)return;
     const out=[],okMeal=m=>MEALS.some(x=>x[0]===m)?m:st.meal;
     (Array.isArray(r&&r.items)?r.items:[]).forEach(x=>{const f=foods[parseInt(x.i)];const g=+x.g;if(f&&g>0&&g<5000)out.push({f,g:Math.round(g),meal:okMeal(x.meal),on:true})});
@@ -1819,7 +1976,7 @@ function realTdeeHTML(){
 
 /* ---------- Copia de seguridad ---------- */
 async function exportBackup(){
-  const data={app:'diario-macros',version:2,exported:new Date().toISOString(),days:S.days,weights:S.weights,foods:S.foods,favs:S.favs,goals:S.goals,profile:S.profile,plan:S.plan,plans:S.plans,templates:S.templates};
+  const data={app:'diario-macros',version:2,exported:new Date().toISOString(),days:S.days,weights:S.weights,foods:S.foods,favs:S.favs,goals:S.goals,profile:S.profile,plan:S.plan,plans:S.plans,templates:S.templates,photos:S.photos};
   saveFile('diario-macros-copia-'+todayKey()+'.json',JSON.stringify(data),'application/json');
 }
 async function saveFile(name,text,type){
@@ -1837,13 +1994,14 @@ async function applyImport(){
   const ids=new Set(S.foods.map(f=>f.id));(j.foods||[]).forEach(f=>{if(f&&f.id&&!ids.has(f.id)&&Array.isArray(f.v))S.foods.push(f)});
   S.favs=[...new Set([...S.favs,...(j.favs||[])])];if(j.profile)S.profile={...DEF_PROFILE,...j.profile};if(j.goals)S.goals={...DEFAULT_GOALS,...j.goals};
   if(j.plan&&Array.isArray(j.plan.days))S.plan=clonePlan(j.plan);Object.entries(j.plans||{}).forEach(([id,p])=>{if(p&&Array.isArray(p.days))S.plans[id]=clonePlan(p)});
+  if(j.photos&&typeof j.photos==='object')Object.entries(j.photos).forEach(([id,v])=>{if(typeof v==='string'&&v.startsWith('data:image/'))S.photos[id]=v});
   if(Array.isArray(j.templates)){const tid=new Set(S.templates.map(t=>t.id));j.templates.forEach(t=>{if(t&&t.id&&!tid.has(t.id))S.templates.push(t)})}
   render();
-  if(S.mode!=='db'){saveLocal();toast('Copia restaurada');return}
+  if(S.mode!=='db'){saveLocal();try{localStorage.setItem(PHOTO_LS,JSON.stringify(S.photos))}catch(e){}toast('Copia restaurada');return}
   const writes=[...Object.keys(days).map(k=>['days/'+k,()=>{const d=S.days[k];return {entries:d.entries,water:d.water||0,type:d.type||'',energy:d.energy||0,sleep:d.sleep||0,note:d.note||'',updated:Date.now()}}]),
     ...Object.keys(j.weights||{}).map(k=>['weights/'+k,()=>({...S.weights[k]})]),
     ['config/foods',()=>({items:S.foods})],['config/favs',()=>({ids:S.favs})],['config/profile',()=>({profile:S.profile})],['config/goals',()=>({goals:S.goals})],['config/templates',()=>({items:S.templates})],
-    ...(S.plan?[['config/plan',()=>({plan:S.plan})]]:[]),...Object.keys(j.plans||{}).filter(id=>S.plans[id]).map(id=>['plans/'+id,()=>({plan:S.plans[id]})])];
+    ...(S.plan?[['config/plan',()=>({plan:S.plan})]]:[]),...Object.keys((j.photos&&typeof j.photos==='object')?j.photos:{}).filter(id=>S.photos[id]).map(id=>['photos/'+id,()=>({img:S.photos[id],t:Date.now()})]),...Object.keys(j.plans||{}).filter(id=>S.plans[id]).map(id=>['plans/'+id,()=>({plan:S.plans[id]})])];
   let done=0,fail=0;toast(`Restaurando 0 de ${writes.length}…`);
   for(const [p,fn] of writes){try{await DB.doc(dp(p)).set(fn());done++}catch(e){fail++}if(done%10===0)toast(`Restaurando ${done} de ${writes.length}…`)}
   toast(fail?`Restaurado con ${fail} errores. Vuelve a intentarlo para completar.`:'Copia restaurada');
@@ -1884,6 +2042,129 @@ function notesHTML(k){const d=S.days[k]||{},e=+d.energy||0;
   <label>Horas de sueño <input type="number" id="dsleep" inputmode="decimal" min="0" max="16" step="0.5" value="${d.sleep||''}" placeholder="8"></label>
   <label class="full">Nota del día <textarea id="dnote" class="ta" rows="2" placeholder="Entreno de pierna, partido, me sentí pesado…">${esc(d.note||'')}</textarea></label></div></section>`}
 
+/* ---------- Imágenes de platos: ilustración generada a partir de los ingredientes + fotos propias ---------- */
+const ING_LOOK=[
+ [/aceite|^sal\b|vinagre|caldo|vino|harina|ajo|salsa de soja|mostaza|zumo de lim|^agua/,null],
+ [/tomate (triturado|frito)/,['#C8372B','sauce']],[/bechamel|nata|mayonesa|queso crema|alioli/,['#F6F0E1','sauce']],
+ [/yogur|skyr|queso fresco batido|requeson/,['#F8F6F0','sauce']],[/guacamole/,['#8DB34A','sauce']],[/tahini|crema de cacahuete|crema de almendra/,['#B9844E','drizzle']],
+ [/miel|sirope/,['#E6A82A','drizzle']],[/cacao/,['#5A3A28','sprinkle']],[/sesamo|chia|lino|canamo/,['#EDE3C8','sprinkle']],
+ [/parmesano|queso rallado/,['#F5E3A1','sprinkle']],[/queso|mozzarella|feta/,['#F7E7B4','chunk']],
+ [/leche|bebida de|kefir/,['#F8F6F0','liquid']],
+ [/arroz/,['#F3EEDC','grain']],[/pasta|espagueti|macarron|fideo|tortellini/,['#E9C77B','strand']],[/cuscus|quinoa|bulgur|sarraceno|avena|granola|muesli/,['#E2C58E','grain']],
+ [/boniato|calabaza/,['#E58A3A','chunk']],[/patata|noquis/,['#E8C468','chunk']],
+ [/pan |pan$|biscote|pita|tortilla de trigo|wrap|tortilla de maiz|tortitas/,['#D9A35F','slice']],
+ [/huevo entero|tortilla francesa/,['#FFFFFF','egg']],[/clara/,['#FBFBF6','sauce']],
+ [/salmon/,['#F08A5D','chunk']],[/atun en lata|surimi|varitas/,['#C9A58C','flake']],[/atun fresco|pez espada/,['#B9605A','chunk']],
+ [/merluza|bacalao|dorada|lubina|rape|lenguado|trucha|caballa|sardina|boqueron|anchoa/,['#F2EEE6','chunk']],
+ [/gamba|langostino/,['#F28C6B','curl']],[/calamar|sepia|pulpo/,['#F1E6D6','ring']],[/mejillon|almeja|berberecho/,['#2E2A3A','shell']],
+ [/pechuga de pavo|fiambre/,['#EDC9B9','slice']],[/jamon|chorizo|panceta|bacon|salchichon|lomo embuchado|cecina|fuet/,['#B5434A','slice']],
+ [/ternera|carne picada|hamburguesa de ternera|albondiga|kebab/,['#7A4A35','chunk']],[/cerdo|conejo|cordero/,['#D9A58A','chunk']],
+ [/pollo|pavo/,['#E8C9A0','chunk']],[/tofu|seitan|tempeh|heura/,['#F1E7CC','chunk']],
+ [/tomate/,['#D8402F','round']],[/lechuga|espinaca|rucula|canonigo|kale|acelga|ensalada|endivia/,['#5E9B3E','leaf']],
+ [/brocoli|coles de bruselas/,['#3F7D3A','floret']],[/pimiento rojo/,['#D63B2F','strip']],[/pimiento verde|pimientos de padron/,['#5A9A3A','strip']],
+ [/cebolla|puerro|cebolleta/,['#EFE6CF','strip']],[/zanahoria/,['#EE8A2B','round']],[/calabacin|pepino/,['#8DB55A','round']],[/berenjena/,['#5B3A5E','round']],
+ [/champinon|seta/,['#CDB59A','round']],[/judias verdes|esparrago/,['#5E9B3E','strip']],[/lombarda/,['#7B3A7A','strip']],
+ [/guisante|edamame|habas/,['#7DB84A','pea']],[/maiz/,['#F2C744','pea']],[/aguacate/,['#9BBE4E','chunk']],[/coliflor/,['#F2EBD8','floret']],
+ [/garbanzo/,['#E3C68C','pea']],[/lenteja/,['#8B5A3C','pea']],[/alubias blancas/,['#F1E9D6','pea']],[/alubias/,['#7A2E2E','pea']],
+ [/platano/,['#F2D56B','round']],[/fresa|frambuesa|cereza|granada/,['#D9364A','round']],[/arandano|mora/,['#3E4C8A','pea']],
+ [/mango|melocoton|albaricoque|naranja|mandarina|papaya/,['#F5A623','chunk']],[/manzana|pera/,['#E5D27A','chunk']],[/kiwi/,['#8CB43C','round']],
+ [/nuez|nueces|almendra|cacahuete|anacardo|avellana|pistacho|pipas/,['#B07B48','nut']],[/aceituna/,['#3A3A2E','pea']],[/datil|pasas/,['#6E3B24','nut']]
+];
+function ingLook(name){const n=norm(name);for(const [re,v] of ING_LOOK)if(re.test(n))return v;return ['#CFC2A8','chunk']}
+const IMGC={};
+function shade(hex,amt){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=v=>Math.max(0,Math.min(255,Math.round(amt<0?v*(1+amt):v+(255-v)*amt)));return '#'+((1<<24)|(f(r)<<16)|(f(g)<<8)|f(b)).toString(16).slice(1)}
+function dishKind(name,ings){const n=norm(name);
+  if(/batido/.test(n))return 'glass';
+  if(/crema|salmorejo|gazpacho|porridge|avena de nevera|^bol |yogur|mousse|lentejas|garbanzos|alubias|curry|arroz con leche|fabada|cocido|natillas|hummus/.test(n))return 'bowl';
+  return 'plate'}
+function dishSVG(id,name,ings){
+  if(IMGC[id])return IMGC[id];
+  let h=2166136261;for(const c of id)h=Math.imul(h^c.charCodeAt(0),16777619);const R=mulberry(h>>>0);
+  const rnd=(a,b)=>a+(b-a)*R();
+  const comps=[];ings.forEach(([n,g])=>{const lk=ingLook(n);if(lk&&g>=4)comps.push({n,g,c:lk[0],t:lk[1]})});
+  const kind=dishKind(name,comps);
+  const W=200,H=125,cx=100,cy=64;let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ilustración: ${esc(name)}" preserveAspectRatio="xMidYMid slice"><defs><radialGradient id="tb${h>>>0}" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="#EDE7DC"/><stop offset="1" stop-color="#D9D0C1"/></radialGradient></defs><rect width="${W}" height="${H}" fill="url(#tb${h>>>0})"/>`;
+  // mantel y servilleta
+  s+=`<rect x="${rnd(-10,0)}" y="${rnd(78,92)}" width="46" height="60" rx="3" fill="#C9D8C5" transform="rotate(${rnd(-14,-4)} 20 100)"/>`;
+  const pieces=[];
+  const sauceC=comps.filter(c=>c.t==='sauce'||c.t==='liquid').sort((a,b)=>b.g-a.g);
+  const solids=comps.filter(c=>!['sauce','liquid','sprinkle','drizzle'].includes(c.t)).sort((a,b)=>b.g-a.g).slice(0,6);
+  const tops=comps.filter(c=>c.t==='sprinkle'||c.t==='drizzle');
+  const piece=(t,c,x,y,sc)=>{const a=rnd(0,180),dk=shade(c,-0.22);
+    switch(t){
+      case 'grain':{let g='';for(let i=0;i<5;i++)g+=`<ellipse cx="${(x+rnd(-5,5)).toFixed(1)}" cy="${(y+rnd(-4,4)).toFixed(1)}" rx="${(2.3*sc).toFixed(1)}" ry="${(1.2*sc).toFixed(1)}" fill="${c}" stroke="${dk}" stroke-width=".35" transform="rotate(${rnd(0,180).toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;return g}
+      case 'strand':return `<path d="M${(x-9).toFixed(1)} ${y.toFixed(1)} q 5 ${rnd(-7,7).toFixed(1)} 9 0 t 9 0" fill="none" stroke="${c}" stroke-width="${(2.6*sc).toFixed(1)}" stroke-linecap="round" transform="rotate(${a.toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/><path d="M${(x-9).toFixed(1)} ${y.toFixed(1)} q 5 ${rnd(-7,7).toFixed(1)} 9 0 t 9 0" fill="none" stroke="${dk}" stroke-width=".4" transform="rotate(${a.toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+      case 'chunk':{const w=rnd(8,12)*sc,hh=rnd(6,9)*sc;return `<rect x="${(x-w/2).toFixed(1)}" y="${(y-hh/2).toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" rx="${(hh/2.6).toFixed(1)}" fill="${c}" stroke="${dk}" stroke-width=".6" transform="rotate(${a.toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/><rect x="${(x-w/2+1.5).toFixed(1)}" y="${(y-hh/2+1.2).toFixed(1)}" width="${(w*.45).toFixed(1)}" height="${(hh*.3).toFixed(1)}" rx="1" fill="#fff" opacity=".22" transform="rotate(${a.toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`}
+      case 'flake':return `<path d="M${x.toFixed(1)} ${y.toFixed(1)} l ${rnd(3,6).toFixed(1)} ${rnd(-3,3).toFixed(1)} l ${rnd(-2,2).toFixed(1)} ${rnd(3,5).toFixed(1)} l ${rnd(-6,-3).toFixed(1)} ${rnd(-1,1).toFixed(1)} z" fill="${c}" stroke="${dk}" stroke-width=".5"/>`;
+      case 'round':return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(rnd(3.5,5)*sc).toFixed(1)}" fill="${c}" stroke="${dk}" stroke-width=".6"/><circle cx="${(x-1).toFixed(1)}" cy="${(y-1.2).toFixed(1)}" r="${(1.2*sc).toFixed(1)}" fill="#fff" opacity=".3"/>`;
+      case 'pea':case 'nut':return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${((t==='nut'?2.6:2)*sc).toFixed(1)}" fill="${c}" stroke="${dk}" stroke-width=".45"/>`;
+      case 'floret':return `<g><rect x="${(x-1.2).toFixed(1)}" y="${y.toFixed(1)}" width="2.4" height="5" fill="${shade(c,0.35)}"/><circle cx="${(x-2.4).toFixed(1)}" cy="${y.toFixed(1)}" r="2.8" fill="${c}"/><circle cx="${(x+2.4).toFixed(1)}" cy="${y.toFixed(1)}" r="2.8" fill="${c}"/><circle cx="${x.toFixed(1)}" cy="${(y-2.2).toFixed(1)}" r="3" fill="${shade(c,0.08)}"/></g>`;
+      case 'leaf':return `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${(8*sc).toFixed(1)}" ry="${(3.6*sc).toFixed(1)}" fill="${shade(c,rnd(-0.1,0.15))}" transform="rotate(${a.toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/><line x1="${(x-6*sc).toFixed(1)}" y1="${y.toFixed(1)}" x2="${(x+6*sc).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${shade(c,0.4)}" stroke-width=".5" transform="rotate(${a.toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+      case 'strip':return `<rect x="${(x-7).toFixed(1)}" y="${(y-1.4).toFixed(1)}" width="14" height="2.8" rx="1.4" fill="${c}" stroke="${dk}" stroke-width=".35" transform="rotate(${a.toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+      case 'slice':{const w=rnd(16,22)*sc,hh=rnd(11,14)*sc;return `<rect x="${(x-w/2).toFixed(1)}" y="${(y-hh/2).toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" rx="3" fill="${c}" stroke="${shade(c,-0.3)}" stroke-width="1.4" transform="rotate(${rnd(-25,25).toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`}
+      case 'egg':return `<path d="M${(x-9).toFixed(1)} ${y.toFixed(1)} q 2 -9 10 -8 q 9 1 8 9 q -2 8 -10 7 q -9 0 -8 -8 z" fill="#FFFFFF" stroke="#E7E2D6" stroke-width=".6"/><circle cx="${(x+.5).toFixed(1)}" cy="${(y+.2).toFixed(1)}" r="4" fill="#F4B324" stroke="#E09A12" stroke-width=".5"/><circle cx="${(x-.6).toFixed(1)}" cy="${(y-1).toFixed(1)}" r="1.2" fill="#fff" opacity=".5"/>`;
+      case 'curl':return `<path d="M${(x-5).toFixed(1)} ${y.toFixed(1)} a 5 5 0 1 1 5 5" fill="none" stroke="${c}" stroke-width="${(3.4*sc).toFixed(1)}" stroke-linecap="round" transform="rotate(${a.toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+      case 'ring':return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(4.2*sc).toFixed(1)}" fill="none" stroke="${c}" stroke-width="${(2.4*sc).toFixed(1)}"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(4.2*sc).toFixed(1)}" fill="none" stroke="${shade(c,-0.2)}" stroke-width=".4"/>`;
+      case 'shell':return `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="7" ry="3.8" fill="${c}" transform="rotate(${a.toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/><ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="4.5" ry="2.2" fill="#F2A65A" transform="rotate(${a.toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+    }return ''};
+  const scatter=(c,cx0,cy0,rmax,a0,a1,count,sc)=>{for(let i=0;i<count;i++){const ang=rnd(a0,a1),r=Math.sqrt(R())*rmax;pieces.push(piece(c.t,c.c,cx0+Math.cos(ang)*r,cy0+Math.sin(ang)*r*0.86,sc))}};
+  const countFor=(t,share)=>{const base={grain:16,strand:12,chunk:6,flake:9,round:7,pea:22,nut:9,floret:5,leaf:8,strip:9,slice:2,egg:1,curl:6,ring:7,shell:6}[t]||6;return Math.max(t==='egg'||t==='slice'?1:3,Math.round(base*(0.5+share*1.6)))};
+  if(kind==='glass'){
+    const liq=comps.filter(c=>!['liquid','sauce'].includes(c.t)).sort((a,b)=>b.g-a.g)[0];const col=liq?shade(liq.c,0.35):'#F2E3D0';
+    s+=`<ellipse cx="${cx}" cy="112" rx="30" ry="6" fill="#000" opacity=".12"/><path d="M78 22 L84 108 Q100 114 116 108 L122 22 Z" fill="#FFFFFF" opacity=".55" stroke="#C9C2B4" stroke-width="1"/><path d="M80.5 38 L85 106 Q100 111 115 106 L119.5 38 Z" fill="${col}"/><ellipse cx="100" cy="38" rx="19.5" ry="3.4" fill="${shade(col,0.2)}"/><path d="M86 30 L89 100" stroke="#fff" stroke-width="2.5" opacity=".45" stroke-linecap="round"/><rect x="108" y="6" width="4" height="40" rx="2" fill="#E04E5A" transform="rotate(14 110 26)"/>`;
+    const fruit=comps.filter(c=>c.t==='round'||c.t==='pea').slice(0,2);fruit.forEach((f,i)=>{s+=piece(f.t,f.c,128+i*9,104,1.3)});
+    s+='</svg>';return IMGC[id]=s}
+  const isBowl=kind==='bowl',PR=isBowl?44:56;
+  s+=`<ellipse cx="${cx+3}" cy="${cy+6}" rx="${PR+4}" ry="${(PR+4)*.86}" fill="#000" opacity=".13"/>`;
+  if(isBowl){s+=`<ellipse cx="${cx}" cy="${cy}" rx="${PR+5}" ry="${(PR+5)*.86}" fill="#F7F5EF" stroke="#DDD6C8" stroke-width="1"/><ellipse cx="${cx}" cy="${cy}" rx="${PR}" ry="${PR*.86}" fill="#E9E4D9"/>`}
+  else{s+=`<ellipse cx="${cx}" cy="${cy}" rx="${PR}" ry="${PR*.86}" fill="#FBFAF6" stroke="#DCD5C7" stroke-width="1"/><ellipse cx="${cx}" cy="${cy}" rx="${PR-9}" ry="${(PR-9)*.86}" fill="#F3F1EA" stroke="#E6E0D3" stroke-width=".8"/>`}
+  const IR=isBowl?PR-3:PR-12;
+  // base líquida o salsa
+  if(isBowl){const base=sauceC[0]||solids[0];let col=base?base.c:'#E8C468';const white=c=>['#F8F6F0','#F6F0E1','#FBFBF6'].includes(c);
+    if(sauceC.length&&solids.length){if(!white(sauceC[0].c))col=sauceC[0].c;else col=solids.some(x=>x.t==='grain')?'#EADFC6':'#F4EFE4'}
+    else if(solids[0])col=shade(solids[0].c,0.12);
+    if(/crema/.test(norm(name))&&solids[0])col=shade(solids[0].c,0.25);
+    if(/mousse/.test(norm(name)))col='#6B4630';
+    s+=`<ellipse cx="${cx}" cy="${cy}" rx="${IR}" ry="${IR*.86}" fill="${col}"/><ellipse cx="${cx-8}" cy="${cy-10}" rx="${IR*.55}" ry="${IR*.3}" fill="#fff" opacity=".12"/>`}
+  else if(sauceC.length){const sc0=sauceC[0];const share=sc0.g/comps.reduce((a,c)=>a+c.g,0);const rr=IR*Math.min(0.78,0.45+share*.8);
+    let d='';for(let i=0;i<=12;i++){const ang=i/12*Math.PI*2,r=rr*rnd(.85,1.05);d+=(i?'L':'M')+(cx+Math.cos(ang)*r).toFixed(1)+' '+(cy+Math.sin(ang)*r*.86).toFixed(1)}
+    s+=`<path d="${d}Z" fill="${sc0.c}" stroke="${shade(sc0.c,-0.12)}" stroke-width=".8" stroke-linejoin="round"/>`}
+  // sólidos por sectores
+  const items=isBowl?solids.slice(1).concat(solids[0]&&sauceC.length?[solids[0]]:[]).slice(0,4):solids;
+  const tot=items.reduce((a,c)=>a+Math.sqrt(c.g),0)||1;let ang=rnd(0,Math.PI*2);
+  items.forEach(c=>{const span=Math.sqrt(c.g)/tot*Math.PI*2,share=Math.sqrt(c.g)/tot;
+    if(c.t==='slice'&&!isBowl){const a=ang+span/2;pieces.push(piece('slice',c.c,cx+Math.cos(a)*IR*.62,cy+Math.sin(a)*IR*.62*.86,1));if(c.g>100)pieces.push(piece('slice',c.c,cx+Math.cos(a+.35)*IR*.5,cy+Math.sin(a+.35)*IR*.5*.86,1))}
+    else if(c.t==='egg'){const n=Math.max(1,Math.min(3,Math.round(c.g/55)));for(let i=0;i<n;i++){const a=ang+span*(i+.5)/n;pieces.push(piece('egg',c.c,cx+Math.cos(a)*IR*.5,cy+Math.sin(a)*IR*.5*.86,1))}}
+    else if(isBowl)scatter(c,cx,cy,IR*.8,ang,ang+span,Math.min(16,Math.round(countFor(c.t,share)*1.2)),1.15);
+    else if(c.t==='grain'||c.t==='strand'||(c.t==='chunk'&&share>.3)){const rx=IR*(.3+.32*share),a=ang+span/2,d=Math.max(0,IR-rx-3),mx=cx+Math.cos(a)*d*.75,my=cy+Math.sin(a)*d*.75*.86;
+      pieces.push(`<ellipse cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" rx="${rx.toFixed(1)}" ry="${(rx*.8).toFixed(1)}" fill="${shade(c.c,c.t==='grain'?-0.06:0.05)}" stroke="${shade(c.c,-0.18)}" stroke-width=".6"/>`);
+      scatter(c,mx,my,rx*.85,0,Math.PI*2,Math.round(countFor(c.t,share)*1.5),1.25)}
+    else scatter(c,cx,cy,IR*.92,ang,ang+span,Math.round(countFor(c.t,share)*1.35),1.4);
+    ang+=span});
+  s+=pieces.join('');
+  tops.forEach(c=>{if(c.t==='sprinkle'){for(let i=0;i<26;i++){const a=rnd(0,Math.PI*2),r=Math.sqrt(R())*IR*.85;s+=`<circle cx="${(cx+Math.cos(a)*r).toFixed(1)}" cy="${(cy+Math.sin(a)*r*.86).toFixed(1)}" r="${rnd(.6,1.2).toFixed(1)}" fill="${c.c}"/>`}}
+    else{let d=`M${(cx-IR*.7).toFixed(1)} ${(cy-6).toFixed(1)}`;for(let i=0;i<4;i++)d+=` q ${(IR*.18).toFixed(1)} ${rnd(-12,12).toFixed(1)} ${(IR*.35).toFixed(1)} ${rnd(-4,8).toFixed(1)}`;s+=`<path d="${d}" fill="none" stroke="${c.c}" stroke-width="2.2" stroke-linecap="round" opacity=".9"/>`}});
+  if(!isBowl&&R()<.8)s+=`<g transform="translate(${cx+PR+10} ${cy-22}) rotate(${rnd(-8,8).toFixed(0)})"><rect x="-2" y="0" width="4" height="58" rx="2" fill="#B9B4AA"/><rect x="-5" y="-14" width="10" height="16" rx="2" fill="#B9B4AA"/></g>`;
+  s+='</svg>';return IMGC[id]=s;
+}
+/* Fotos propias, guardadas en privado */
+const PHOTO_LS='diario-macros-photos';
+function loadPhotosLocal(){try{S.photos=JSON.parse(localStorage.getItem(PHOTO_LS)||'{}')||{}}catch(e){S.photos={}}}
+function savePhoto(id){
+  if(S.mode==='db'){queueWrite('photos/'+id,S.photos[id]?{img:S.photos[id],t:Date.now()}:null);return}
+  try{localStorage.setItem(PHOTO_LS,JSON.stringify(S.photos))}catch(e){delete S.photos[id];toast('No queda espacio en este dispositivo para más fotos. Quita alguna antes.')}
+}
+function shrinkImage(file,max=560,q=0.72){return new Promise((res,rej)=>{const url=URL.createObjectURL(file),im=new Image();
+  im.onload=()=>{const sc=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight)),w=Math.round(im.naturalWidth*sc),h=Math.round(im.naturalHeight*sc);
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(im,0,0,w,h);URL.revokeObjectURL(url);res(cv.toDataURL('image/jpeg',q))};
+  im.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('img'))};im.src=url})}
+async function setDishPhoto(id,file){try{const d=await shrinkImage(file);S.photos[id]=d;savePhoto(id);render();if(SH.st)drawSheet();toast('Foto guardada')}catch(e){toast('No he podido abrir esa imagen. Prueba con otra foto (JPG o PNG).')}}
+function dishIngs(f){if(f.rec){const r=findRecipe(f.rec);return r?r.ing:[]}if(f.ing)return f.ing.map(i=>[i.name,i.g]);return [[f.n,100]]}
+function dishPic(f,cls){const id=f.rec?'r-'+f.rec:f.id;const ph=S.photos&&S.photos[id];
+  return `<span class="dpic ${cls||''}">${ph?`<img src="${ph}" alt="Foto de ${esc(f.n)}" loading="lazy">`:dishSVG(id,f.n,dishIngs(f))}${ph?'':'<span class="dpic-tag">Ilustración</span>'}</span>`}
+function photoControls(id){const has=S.photos&&S.photos[id];
+  return `<div class="btnrow"><label class="pillbtn filebtn">${has?'Cambiar foto':'Hacer o subir una foto'}<input type="file" data-photo="${esc(id)}" accept="image/*" hidden></label>${has?`<button class="pillbtn" data-unphoto="${esc(id)}">Quitar foto</button>`:''}</div>`}
+
 /* ---------- Hoja modal ---------- */
 const SH={el:document.getElementById('sheet'),body:document.getElementById('shBody'),foot:document.getElementById('shFoot'),title:document.getElementById('shTitle'),back:document.getElementById('shBack'),st:null};
 const coarse=()=>matchMedia('(pointer:coarse)').matches;
@@ -1917,7 +2198,7 @@ function drawDetail(){
   const st=SH.st,f=st.food;SH.title.textContent=f.n;
   const isEdit=!!st.editId;
   const portions=[[f.pg,f.pl+' ('+fmt(f.pg)+' g)'],[f.pg*2,'2 × '+f.pl],[50,'50 g'],[100,'100 g'],[150,'150 g'],[200,'200 g']].filter((p,i,a)=>p[0]>0&&a.findIndex(q=>q[0]===p[0])===i);
-  SH.body.innerHTML=`<div class="chips">${favBtn(f)}${f.rec?`<button class="pillbtn" data-rec="${esc(f.rec)}">Ver receta</button>`:''}<span class="hint" style="align-self:center">${esc(CATS[f.cat]||'')}</span></div>
+  SH.body.innerHTML=`${f.rec||f.ing?dishPic(f,'hero')+(f.ing&&f.own?photoControls(f.id):''):''}<div class="chips">${favBtn(f)}${f.rec?`<button class="pillbtn" data-rec="${esc(f.rec)}">Ver receta</button>`:''}<span class="hint" style="align-self:center">${esc(CATS[f.cat]||'')}</span></div>
   ${st.view?'':`<div><span class="eyebrow">Cantidad</span><div class="gramrow" style="margin-top:6px"><input id="grams" type="number" inputmode="decimal" min="0" step="any" value="${st.grams}" aria-label="Gramos"><span class="muted">gramos</span></div></div>
   <div class="chips">${portions.map(([g,l])=>`<button class="cat" data-portion="${g}">${esc(l)}</button>`).join('')}</div>
   <div class="chips" role="group" aria-label="Comida">${MEALS.map(([id,l])=>`<button class="cat" data-dmeal="${id}" aria-pressed="${st.meal===id}">${l}</button>`).join('')}</div>`}
@@ -2087,6 +2368,7 @@ document.addEventListener('click',ev=>{
   if(t.id==='airun'){runAI();return}
   if(t.id==='aistop'){st.ctl&&st.ctl.abort();return}
   if(t.id==='aiadd'){const on=st.res.filter(x=>x.on&&x.g>0);on.forEach(x=>addEntry(x.f.est?{...x.f,n:x.f.n+' (estimado)'}:x.f,x.g,x.meal,S.cur));closeSheet();S.view='hoy';render();toast(`${on.length} alimentos añadidos`);return}
+  if(ds.unphoto){delete S.photos[ds.unphoto];savePhoto(ds.unphoto);render();drawSheet();toast('Foto quitada');return}
   if(ds.rserv){st.serv=Math.max(1,Math.min(12,st.serv+(+ds.rserv)));drawRView();return}
   if(ds.reat){st.eat=+ds.reat;drawRView();return}
   if(ds.rmeal){st.meal=ds.rmeal;drawRView();return}
@@ -2127,6 +2409,8 @@ document.addEventListener('change',e=>{
   if(el.id==='fsort'){S.sort=el.value;document.getElementById('flist').innerHTML=foodListHTML();return}
   if(el.id==='dstart'){if(el.value){S.dstart=el.value;S.dtype=''}render();return}
   if(el.id==='rsort'){S.rsort=el.value;document.getElementById('rlist').innerHTML=recipeListHTML();return}
+  if(el.dataset.photo){const f=el.files&&el.files[0];if(f&&S.ready)setDishPhoto(el.dataset.photo,f);el.value='';return}
+  if(el.id==='aiphoto'&&SH.st&&SH.st.mode==='ai'){const f=el.files&&el.files[0];if(f){const st=SH.st;if(st.photoUrl)URL.revokeObjectURL(st.photoUrl);st.photo=f;st.photoUrl=URL.createObjectURL(f);st.res=null;st.err='';drawAI()}el.value='';return}
   if(el.id==='lblfile'){const f=el.files&&el.files[0];if(f)readLabel(f);el.value='';return}
   if(el.id==='importFile'){const f=el.files&&el.files[0];if(f)readBackupFile(f);el.value='';return}
   if(el.dataset.prof&&el.type!=='range'){if(!S.ready)return;const x=parseFloat(String(el.value).replace(',','.'));if(!(x>0)){el.value=S.profile[el.dataset.prof];return}S.profile[el.dataset.prof]=x;saveProfile();refreshProfileOutputs();return}
