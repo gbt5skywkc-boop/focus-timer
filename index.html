@@ -2204,7 +2204,7 @@ function photoControls(id){const has=S.photos&&S.photos[id];
    El usuario elige proveedor y pone su propia clave; todo se guarda solo en el dispositivo. */
 const AI_LS='diario-macros-ai',AIKEY_LS='diario-macros-apikey';
 const PROVS={
-  gemini:{n:'Google Gemini',short:'Gemini',def:'gemini-flash-latest',keyUrl:'aistudio.google.com',keyPh:'AIza…',
+  gemini:{n:'Google Gemini',short:'Gemini',def:'gemini-flash-latest',keyUrl:'aistudio.google.com',keyPh:'Pega aquí tu clave de AI Studio',
     help:'Crea la clave gratis en aistudio.google.com (botón "Get API key"). Tiene un nivel gratuito con un límite de peticiones al día. Ojo: en el nivel gratuito Google puede usar lo que envías, fotos incluidas, para mejorar sus productos.'},
   anthropic:{n:'Anthropic Claude',short:'Claude',def:'claude-sonnet-5-5',keyUrl:'console.anthropic.com',keyPh:'sk-ant-…',
     help:'Crea la clave en console.anthropic.com. Es de pago por uso: cada foto gasta un poco del saldo de tu cuenta. Anthropic no usa los datos de la API para entrenar sus modelos.'},
@@ -2217,12 +2217,22 @@ function aiCfg(){let c=null;try{c=JSON.parse(localStorage.getItem(AI_LS)||'null'
 function setAiCfg(c){try{localStorage.setItem(AI_LS,JSON.stringify(c));localStorage.removeItem(AIKEY_LS);return true}catch(e){return false}}
 function getApiKey(){return aiCfg().key||''}
 function aiName(){if(SAMPLE&&SAMPLE.viaKey){const c=aiCfg();return (PROVS[c.prov]||PROVS.gemini).short}return 'Claude'}
-function apiErr(code,message,text){return {code,message,text}}
+function apiErr(code,message,text,detail){return {code,message,text,detail}}
 function tolerantJSON(t){try{return JSON.parse(t)}catch(e){}const m=t.match(/```(?:json)?\s*([\s\S]*?)```/);if(m){try{return JSON.parse(m[1])}catch(e){}}
   const a=t.search(/[\[{]/),b=Math.max(t.lastIndexOf('}'),t.lastIndexOf(']'));if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch(e){}}throw apiErr('invalid_json','json',t)}
-async function getJSON(url,opt){let r;try{r=await fetch(url,opt)}catch(e){if(e&&e.name==='AbortError')throw apiErr('cancelled','');throw apiErr('upstream_error','red')}
-  let j=null;try{j=await r.json()}catch(e){}return {r,j}}
-function httpErr(r,j){const msg=JSON.stringify(j||{}).toLowerCase();
+async function getJSON(url,opt){let r;try{r=await fetch(url,opt)}catch(e){if(e&&e.name==='AbortError')throw apiErr('cancelled','');
+    throw apiErr('upstream_error','red',undefined,`sin respuesta del servidor (${(e&&e.message)||'error de red'}). Comprueba tu conexión a internet.`)}
+  let raw='',j=null;try{raw=await r.text()}catch(e){}try{j=raw?JSON.parse(raw):null}catch(e){}if(j===null&&raw)j={_raw:raw.slice(0,300)};return {r,j}}
+/* Texto del error tal y como lo devuelve la API: código HTTP, estado y mensaje */
+function apiDetail(r,j){let o=Array.isArray(j)?j[0]:j;let er=o&&o.error!==undefined?o.error:o;
+  let msg='',st='',reason='';
+  if(typeof er==='string')msg=er;
+  else if(er&&typeof er==='object'){msg=er.message||er.msg||'';st=er.status||er.type||(typeof er.code==='string'?er.code:'')||'';
+    const det=Array.isArray(er.details)?er.details.find(d=>d&&d.reason):null;if(det)reason=det.reason}
+  if(!msg&&o&&o._raw)msg=o._raw;
+  return `HTTP ${r.status}${st?' '+st:''}${reason&&reason!==st?' ('+reason+')':''}: ${msg||r.statusText||'sin mensaje'}`}
+function httpErr(r,j){const e=httpErrCode(r,j);e.detail=apiDetail(r,j);return e}
+function httpErrCode(r,j){const msg=JSON.stringify(j||{}).toLowerCase();
   if(r.status===401||r.status===403||/api_key_invalid|invalid api key|invalid x-api-key|incorrect api key/.test(msg))return apiErr('bad_key','clave');
   if(r.status===404||/model.*(not found|not_found|does not exist)|not supported for generatecontent/.test(msg))return apiErr('model_missing','modelo');
   if(r.status===429||r.status===529)return apiErr('rate_limited','límite');
@@ -2230,7 +2240,7 @@ function httpErr(r,j){const msg=JSON.stringify(j||{}).toLowerCase();
   return apiErr('upstream_error','http '+r.status)}
 /* Busca un modelo disponible con visión si el configurado no existe */
 async function discoverModel(c){
-  if(c.prov==='gemini'){const {r,j}=await getJSON('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key='+encodeURIComponent(c.key));if(!r.ok)throw httpErr(r,j);
+  if(c.prov==='gemini'){const {r,j}=await getJSON('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200',{headers:{'x-goog-api-key':c.key}});if(!r.ok)throw httpErr(r,j);
     const ms=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')).map(m=>m.name.replace(/^models\//,''))
       .filter(n=>/^gemini/.test(n)&&!/image|tts|live|audio|embed|computer|thinking-exp|learnlm|robotics/.test(n));
     const score=n=>(/flash/.test(n)?100:0)+(/lite/.test(n)?-20:0)+(/preview|exp/.test(n)?-15:0)+(/latest/.test(n)?5:0)+parseFloat((n.match(/gemini-(\d+(?:\.\d+)?)/)||[0,0])[1])*3;
@@ -2245,7 +2255,7 @@ async function discoverModel(c){
 async function callProvider(c,model,content,jsonMode,signal){
   if(c.prov==='gemini'){
     const parts=content.map(x=>x.type==='image'?{inline_data:{mime_type:'image/jpeg',data:x.data}}:{text:x.text});
-    const {r,j}=await getJSON(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(c.key)}`,{method:'POST',signal,headers:{'content-type':'application/json'},
+    const {r,j}=await getJSON(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{method:'POST',signal,headers:{'content-type':'application/json','x-goog-api-key':c.key},
       body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:{temperature:0.2,maxOutputTokens:4096,...(jsonMode?{responseMimeType:'application/json'}:{})}})});
     if(!r.ok)throw httpErr(r,j);
     const cand=(j.candidates||[])[0];if(!cand){if(j.promptFeedback&&j.promptFeedback.blockReason)throw apiErr('refused','bloqueado');throw apiErr('empty_completion','')}
@@ -2280,6 +2290,7 @@ function makeApiSample(){
   f.viaKey=true;return f}
 function enableApiSample(){if(getApiKey()){SAMPLE=makeApiSample();SAMPLE_IMG={maxCount:1,mediaTypes:['image/jpeg','image/png','image/webp','image/gif']}}else{SAMPLE=null;SAMPLE_IMG=null}}
 function aiErrText(e){const c=e&&e.code,p=(PROVS[aiCfg().prov]||PROVS.gemini);
+  if(e&&e.detail)return `Error de ${p.n} → ${e.detail}`;
   if(c==='bad_key')return `La clave no es válida o no tiene permisos. Revísala en ${p.keyUrl}.`;
   if(c==='rate_limited')return 'Has llegado al límite de peticiones de tu cuenta. Espera un rato (en el nivel gratuito de Gemini, hasta el día siguiente).';
   if(c==='no_credit')return `Tu cuenta no tiene saldo o cuota disponible. Revísala en ${p.keyUrl}.`;
@@ -2307,7 +2318,7 @@ function apiKeyHTML(){if(!STANDALONE)return '';const c=aiCfg(),has=!!c.key,sel=A
   <div id="keyout" hidden></div></section>`}
 function saveAiFromForm(){
   const c=aiCfg(),sel=AIUI||c.prov,kIn=(document.getElementById('keyin').value||'').trim(),model=(document.getElementById('modelin').value||'').trim();
-  const key=kIn||(c.prov===sel?c.key:'');if(key.length<20){toast('Pega la clave completa.');return}
+  const key=(kIn||(c.prov===sel?c.key:'')).replace(/^["'\s]+|["'\s]+$/g,'');if(!key){toast('Pega tu clave de API.');return}
   const nc={prov:sel,key,model};if(sel==='openai'){const b=(document.getElementById('basein').value||'').trim();if(b&&!/^https?:\/\//.test(b)){toast('La dirección base debe empezar por https://');return}nc.base=b||'https://api.openai.com/v1'}
   if(!setAiCfg(nc)){toast('No se pudo guardar en este dispositivo.');return}
   AIUI=null;enableApiSample();render();setTimeout(testApiKey,50)}
