@@ -2276,12 +2276,14 @@ async function callProvider(c,model,content,jsonMode,signal){
   const cont0=content.map(x=>x.type==='image'?{type:'image_url',image_url:{url:'data:image/jpeg;base64,'+x.data}}:{type:'text',text:x.text});
   if(c.prov==='openrouter'){
     const {r,j}=await getJSON('https://openrouter.ai/api/v1/chat/completions',{method:'POST',signal,headers:{'content-type':'application/json',authorization:'Bearer '+c.key,'X-Title':'Diario de Macros'},
-      body:JSON.stringify({model,messages:[{role:'user',content:cont0}],max_tokens:2500,temperature:0.2})});
+      body:JSON.stringify({model,messages:[{role:'user',content:cont0}],max_tokens:8000,temperature:0.2,reasoning:{effort:'low'}})});
     if(!r.ok)throw httpErr(r,j);
     if(j&&j.error&&!(j.choices&&j.choices.length)){const fake={status:(j.error.code&&+j.error.code)||502,statusText:''};throw httpErr(fake,j)}
     const ch=(j.choices||[])[0];
     if(ch&&ch.error)throw httpErr({status:(ch.error.code&&+ch.error.code)||502,statusText:''},{error:ch.error});
-    return {text:(ch&&ch.message&&ch.message.content)||'',truncated:ch&&ch.finish_reason==='length',used:j.model}}
+    const msg=(ch&&ch.message)||{};let text=typeof msg.content==='string'?msg.content:Array.isArray(msg.content)?msg.content.map(p=>p.text||'').join(''):'';
+    if(!text.trim()&&typeof msg.reasoning==='string'&&/[{\[]/.test(msg.reasoning))text=msg.reasoning;
+    return {text,truncated:ch&&ch.finish_reason==='length',used:j.model,finish:ch&&(ch.native_finish_reason||ch.finish_reason)}}
   const base=(c.base||'https://api.openai.com/v1').replace(/\/+$/,'');
   const cont=content.map(x=>x.type==='image'?{type:'image_url',image_url:{url:'data:image/jpeg;base64,'+x.data}}:{type:'text',text:x.text});
   const {r,j}=await getJSON(base+'/chat/completions',{method:'POST',signal,headers:{'content-type':'application/json',authorization:'Bearer '+c.key},
@@ -2294,14 +2296,28 @@ async function apiCall(prompt,opt={},jsonMode=false){
   for(const im of imgs){const d=await shrinkImage(im,1280,0.82);content.push({type:'image',data:d.split(',')[1]})}
   content.push({type:'text',text:typeof prompt==='string'?prompt:prompt.map(m=>m.content).join('\n\n')});
   let model=c.model||c.found||PROVS[c.prov].def,res;
-  try{if(!model)throw apiErr('model_missing','vacío');res=await callProvider(c,model,content,jsonMode,opt.signal)}
-  catch(e){if(e.code!=='model_missing')throw e;
-    model=await discoverModel(c);const c2={...c,found:model};if(!c.model)setAiCfg(c2);res=await callProvider(c2,model,content,jsonMode,opt.signal)}
-  if(!res.text||!res.text.trim())throw apiErr('empty_completion','',undefined,res.used?`el modelo ${res.used} ha devuelto una respuesta vacía. Vuelve a intentarlo.`:undefined);
-  return {...res,model:res.used&&res.used!==model?`${model} → ${res.used}`:model}}
+  const once=async(m)=>{let r;
+    try{if(!m)throw apiErr('model_missing','vacío');r=await callProvider(c,m,content,jsonMode,opt.signal)}
+    catch(e){if(e.code!=='model_missing')throw e;m=await discoverModel(c);const c2={...c,found:m};if(!c.model)setAiCfg(c2);r=await callProvider(c2,m,content,jsonMode,opt.signal)}
+    const who=r.used||m;
+    if(!r.text||!r.text.trim())throw apiErr('empty_completion','',undefined,`el modelo ${who} ha devuelto una respuesta vacía${r.finish==='length'||r.truncated?' (se quedó sin espacio mientras razonaba)':''}.`);
+    if(jsonMode){try{r.json=tolerantJSON(r.text)}catch(e){throw apiErr('invalid_json','json',r.text,`el modelo ${who} no ha devuelto los datos en el formato esperado.`)}}
+    return {...r,model:r.used&&r.used!==m?`${m} → ${r.used}`:m}};
+  /* Los modelos gratuitos de OpenRouter fallan a veces: se reintenta con otros antes de rendirse */
+  const tries=c.prov==='openrouter'&&!c.model?3:1,failed=[];let last;
+  for(let i=0;i<tries;i++){
+    let m=model;
+    if(i===2){try{const {j}=await getJSON('https://openrouter.ai/api/v1/models',{headers:{authorization:'Bearer '+c.key},signal:opt.signal});
+      const alt=((j&&j.data)||[]).filter(x=>/:free$/.test(x.id)&&((x.architecture&&x.architecture.input_modalities)||[]).includes('image')&&!failed.includes(x.id)).map(x=>x.id);if(alt[0])m=alt[0]}catch(e){if(e.code==='cancelled')throw e}}
+    try{return await once(m)}
+    catch(e){if(!['empty_completion','invalid_json','upstream_error'].includes(e.code)||(e.code==='upstream_error'&&!/HTTP 5\d\d/.test(e.detail||'')))throw e;
+      last=e;const u=(e.detail||'').match(/modelo (\S+)/);if(u)failed.push(u[1]);
+      if(typeof opt.onRetry==='function')try{opt.onRetry(i+1,tries)}catch(x){}}}
+  if(tries>1&&last&&last.detail)last.detail+=` Lo he intentado ${tries} veces con modelos gratuitos distintos (${[...new Set(failed)].join(', ')||'openrouter/free'}). Prueba de nuevo en un momento o cambia a Gemini.`;
+  throw last}
 function makeApiSample(){
   const f=async(prompt,opt={})=>{const r=await apiCall(prompt,opt);if(opt.onText)try{opt.onText({text:r.text,delta:r.text})}catch(e){}return {...r,modelTierApplied:'default'}};
-  f.json=async(prompt,opt={})=>{const r=await apiCall(prompt+'\n\nResponde únicamente con el JSON, sin texto adicional.',opt,true);return tolerantJSON(r.text)};
+  f.json=async(prompt,opt={})=>{const r=await apiCall(prompt+'\n\nResponde únicamente con el JSON, sin texto adicional.',opt,true);return r.json!==undefined?r.json:tolerantJSON(r.text)};
   f.limits=async()=>({maxPromptBytes:262144,images:{maxCount:1,maxInputBytes:20e6,mediaTypes:['image/jpeg','image/png','image/webp','image/gif']}});
   f.viaKey=true;return f}
 function enableApiSample(){if(getApiKey()){SAMPLE=makeApiSample();SAMPLE_IMG={maxCount:1,mediaTypes:['image/jpeg','image/png','image/webp','image/gif']}}else{SAMPLE=null;SAMPLE_IMG=null}}
@@ -2419,7 +2435,7 @@ Rehaz la lista completa aplicando su corrección; lo que diga el usuario manda s
 Responde solo con JSON, así:
 {"plato":"Nombre corto del plato","items":[{"i":12,"g":150,"conf":"alta"}],"nuevos":[{"name":"Salsa de yogur","g":30,"conf":"media","k":120,"p":3,"c":5,"f":10,"fi":0,"su":4,"sf":2,"na":300}],"supuestos":["Calculo una cucharada de aceite"]}`;
   try{
-    const r=await SAMPLE.json(prompt,{images:st.photo,signal:ctl.signal});
+    const r=await SAMPLE.json(prompt,{images:st.photo,signal:ctl.signal,onRetry:(n,tot)=>{const el=document.querySelector('#shBody .thinking');if(el&&SH.st===st)el.textContent=`El modelo no ha respondido bien. Probando con otro modelo gratuito (${n+1} de ${tot})…`}});
     if(SH.st!==st)return;
     if(!r||r.error){st.err='No he reconocido comida en la foto. Prueba con otra foto más cerca, desde arriba y con buena luz.';st.res=null}
     else{
