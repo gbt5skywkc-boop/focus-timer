@@ -376,6 +376,8 @@ span.addline{display:block}
 .aiphoto{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .aiphoto img{width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
 /* foto → macros */
+.provseg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-radius:14px}
+.provseg button{border-radius:10px}
 .dropzone{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;border:2px dashed color-mix(in srgb,var(--accent) 55%,var(--line));border-radius:16px;padding:34px 18px;background:color-mix(in srgb,var(--accent) 5%,var(--surface));cursor:pointer;color:var(--accent)}
 .dropzone:hover,.drag .dropzone{background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
 .dropzone:focus-within{outline:2px solid var(--accent);outline-offset:2px}
@@ -2206,6 +2208,8 @@ const AI_LS='diario-macros-ai',AIKEY_LS='diario-macros-apikey';
 const PROVS={
   gemini:{n:'Google Gemini',short:'Gemini',def:'gemini-flash-latest',keyUrl:'aistudio.google.com',keyPh:'Pega aquí tu clave de AI Studio',
     help:'Crea la clave gratis en aistudio.google.com (botón "Get API key"). Tiene un nivel gratuito con un límite de peticiones al día. Ojo: en el nivel gratuito Google puede usar lo que envías, fotos incluidas, para mejorar sus productos.'},
+  openrouter:{n:'OpenRouter',short:'OpenRouter',def:'openrouter/free',keyUrl:'openrouter.ai/keys',keyPh:'sk-or-…',
+    help:'Crea una cuenta gratis en openrouter.ai y genera la clave en openrouter.ai/keys. Por defecto usa "openrouter/free", que elige solo un modelo gratuito capaz de ver imágenes. Gratis: 50 análisis al día (1.000 si recargas 10 $ una sola vez). Cada petición puede responderla un modelo distinto, así que la precisión varía, y lo que se hace con tus fotos depende de ese modelo. Si te sale un error de "data policy", activa los modelos gratuitos en openrouter.ai/settings/privacy.'},
   anthropic:{n:'Anthropic Claude',short:'Claude',def:'claude-sonnet-5-5',keyUrl:'console.anthropic.com',keyPh:'sk-ant-…',
     help:'Crea la clave en console.anthropic.com. Es de pago por uso: cada foto gasta un poco del saldo de tu cuenta. Anthropic no usa los datos de la API para entrenar sus modelos.'},
   openai:{n:'OpenAI u otro compatible',short:'IA',def:'',keyUrl:'platform.openai.com',keyPh:'sk-…',
@@ -2247,6 +2251,9 @@ async function discoverModel(c){
     ms.sort((a,b)=>score(b)-score(a));if(!ms.length)throw apiErr('model_missing','sin modelos');return ms[0]}
   if(c.prov==='anthropic'){const {r,j}=await getJSON('https://api.anthropic.com/v1/models?limit=100',{headers:{'x-api-key':c.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}});if(!r.ok)throw httpErr(r,j);
     const ids=(j.data||[]).map(m=>m.id);const pick=ids.find(i=>/sonnet/.test(i))||ids.find(i=>/opus/.test(i))||ids[0];if(!pick)throw apiErr('model_missing','sin modelos');return pick}
+  if(c.prov==='openrouter'){const {r,j}=await getJSON('https://openrouter.ai/api/v1/models',{headers:{authorization:'Bearer '+c.key}});if(!r.ok)throw httpErr(r,j);
+    const ms=(j.data||[]).filter(m=>/:free$/.test(m.id)&&((m.architecture&&m.architecture.input_modalities)||[]).includes('image')).map(m=>m.id);
+    return ms[0]||'openrouter/free'}
   const base=(c.base||'https://api.openai.com/v1').replace(/\/+$/,'');
   const {r,j}=await getJSON(base+'/models',{headers:{authorization:'Bearer '+c.key}});if(!r.ok)throw httpErr(r,j);
   const ids=(j.data||[]).map(m=>m.id).filter(i=>!/audio|realtime|tts|transcri|whisper|embed|image|dall|search|moderation|davinci|babbage|codex|instruct/.test(i));
@@ -2266,6 +2273,15 @@ async function callProvider(c,model,content,jsonMode,signal){
       body:JSON.stringify({model,max_tokens:2500,messages:[{role:'user',content:cont}]})});
     if(!r.ok)throw httpErr(r,j);
     return {text:(j.content||[]).filter(x=>x.type==='text').map(x=>x.text).join(''),truncated:j.stop_reason==='max_tokens'}}
+  const cont0=content.map(x=>x.type==='image'?{type:'image_url',image_url:{url:'data:image/jpeg;base64,'+x.data}}:{type:'text',text:x.text});
+  if(c.prov==='openrouter'){
+    const {r,j}=await getJSON('https://openrouter.ai/api/v1/chat/completions',{method:'POST',signal,headers:{'content-type':'application/json',authorization:'Bearer '+c.key,'X-Title':'Diario de Macros'},
+      body:JSON.stringify({model,messages:[{role:'user',content:cont0}],max_tokens:2500,temperature:0.2})});
+    if(!r.ok)throw httpErr(r,j);
+    if(j&&j.error&&!(j.choices&&j.choices.length)){const fake={status:(j.error.code&&+j.error.code)||502,statusText:''};throw httpErr(fake,j)}
+    const ch=(j.choices||[])[0];
+    if(ch&&ch.error)throw httpErr({status:(ch.error.code&&+ch.error.code)||502,statusText:''},{error:ch.error});
+    return {text:(ch&&ch.message&&ch.message.content)||'',truncated:ch&&ch.finish_reason==='length',used:j.model}}
   const base=(c.base||'https://api.openai.com/v1').replace(/\/+$/,'');
   const cont=content.map(x=>x.type==='image'?{type:'image_url',image_url:{url:'data:image/jpeg;base64,'+x.data}}:{type:'text',text:x.text});
   const {r,j}=await getJSON(base+'/chat/completions',{method:'POST',signal,headers:{'content-type':'application/json',authorization:'Bearer '+c.key},
@@ -2281,8 +2297,8 @@ async function apiCall(prompt,opt={},jsonMode=false){
   try{if(!model)throw apiErr('model_missing','vacío');res=await callProvider(c,model,content,jsonMode,opt.signal)}
   catch(e){if(e.code!=='model_missing')throw e;
     model=await discoverModel(c);const c2={...c,found:model};if(!c.model)setAiCfg(c2);res=await callProvider(c2,model,content,jsonMode,opt.signal)}
-  if(!res.text||!res.text.trim())throw apiErr('empty_completion','');
-  return {...res,model}}
+  if(!res.text||!res.text.trim())throw apiErr('empty_completion','',undefined,res.used?`el modelo ${res.used} ha devuelto una respuesta vacía. Vuelve a intentarlo.`:undefined);
+  return {...res,model:res.used&&res.used!==model?`${model} → ${res.used}`:model}}
 function makeApiSample(){
   const f=async(prompt,opt={})=>{const r=await apiCall(prompt,opt);if(opt.onText)try{opt.onText({text:r.text,delta:r.text})}catch(e){}return {...r,modelTierApplied:'default'}};
   f.json=async(prompt,opt={})=>{const r=await apiCall(prompt+'\n\nResponde únicamente con el JSON, sin texto adicional.',opt,true);return tolerantJSON(r.text)};
@@ -2290,7 +2306,7 @@ function makeApiSample(){
   f.viaKey=true;return f}
 function enableApiSample(){if(getApiKey()){SAMPLE=makeApiSample();SAMPLE_IMG={maxCount:1,mediaTypes:['image/jpeg','image/png','image/webp','image/gif']}}else{SAMPLE=null;SAMPLE_IMG=null}}
 function aiErrText(e){const c=e&&e.code,p=(PROVS[aiCfg().prov]||PROVS.gemini);
-  if(e&&e.detail)return `Error de ${p.n} → ${e.detail}`;
+  if(e&&e.detail)return `Error de ${p.n} → ${e.detail}${aiCfg().prov==='openrouter'&&/data policy|privacy/i.test(e.detail)?' · Solución: activa los modelos gratuitos en openrouter.ai/settings/privacy.':''}`;
   if(c==='bad_key')return `La clave no es válida o no tiene permisos. Revísala en ${p.keyUrl}.`;
   if(c==='rate_limited')return 'Has llegado al límite de peticiones de tu cuenta. Espera un rato (en el nivel gratuito de Gemini, hasta el día siguiente).';
   if(c==='no_credit')return `Tu cuenta no tiene saldo o cuota disponible. Revísala en ${p.keyUrl}.`;
@@ -2307,7 +2323,7 @@ function apiKeyHTML(){if(!STANDALONE)return '';const c=aiCfg(),has=!!c.key,sel=A
   return `<section class="card stack" style="gap:12px" id="keybox"><h2 class="sec">IA para analizar fotos</h2>
   <p class="hint" style="margin:0">Esta app funciona sola, sin Claude. Para reconocer comidas en fotos conecta un modelo de IA externo con tu propia clave. La clave se guarda solo en este dispositivo y las fotos se envían al proveedor solo cuando pulsas analizar.</p>
   ${has?`<div class="btnrow" style="align-items:center"><span class="chip ok">Conectado: ${esc(PROVS[c.prov].n)}</span><span class="hint" id="aistate">${esc(c.model?'Modelo: '+c.model:c.found?'Modelo: '+c.found:'Modelo automático')}</span></div>`:''}
-  <div class="seg" role="group" aria-label="Proveedor">${Object.entries(PROVS).map(([k,v])=>`<button data-aiprov="${k}" aria-pressed="${sel===k}">${k==='gemini'?'Gemini (gratis)':k==='anthropic'?'Claude':'OpenAI / otro'}</button>`).join('')}</div>
+  <div class="seg provseg" role="group" aria-label="Proveedor">${Object.entries(PROVS).map(([k,v])=>`<button data-aiprov="${k}" aria-pressed="${sel===k}">${k==='gemini'?'Gemini (gratis)':k==='openrouter'?'OpenRouter (gratis)':k==='anthropic'?'Claude':'OpenAI / otro'}</button>`).join('')}</div>
   <p class="hint" style="margin:0">${esc(P.help)}</p>
   <div class="form">
     <label class="full">Clave de API <input id="keyin" type="password" autocomplete="off" placeholder="${has&&c.prov===sel?'•••••••• (guardada; escribe otra para cambiarla)':P.keyPh}"></label>
